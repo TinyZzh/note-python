@@ -13,6 +13,7 @@ try:
     cur = conn.cursor()
 
     cur.execute("show databases;")
+    # select
     cur.execute("SELECT * FROM `t_character` LIMIT 0,1;")
     rows = cur.fetchall()
     for row in rows:
