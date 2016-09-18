@@ -1,14 +1,8 @@
 #!/usr/bin/python
 # -*- coding: UTF-8 -*-
 
-import httplib
+from httplib import HTTPConnection
 import urllib
-
-params = urllib.urlencode({'@number': 12524, '@type': 'issue', '@action': 'show'})
-
-print params
-
-headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
 
 
 def status_200(resp):
@@ -21,22 +15,38 @@ def status_default(resp):
     print('[WARN] Status:', resp.status, ', Reason:', resp.reason)
     return
 
-try:
-    httpClient = httplib.HTTPConnection('tinyzzh.github.io', 80)
 
-    httpClient.request('GET', '/xxx/11')
-    response = httpClient.getresponse()
+def request(host, port, url='', switch=None, params={}, method='GET', body=None, headers={}):
+    if switch is None:
+        switch = {200: status_200, }
+    try:
+        url += urllib.urlencode(params)
+        http_client = HTTPConnection(host, port)
+        http_client.request(method, url, body, headers)
+        response = http_client.getresponse()
+        switch.get(response.status, status_default)(response)
 
-    switch = {
-        200: status_200,
-    }
-    switch.get(response.status, status_default)(response)
+        # if response.status == 200:
+        #     data = response.read()
+        #     print (data)
+        # else:
+        #     print ("[WARN] Status:", response.status, ", Reason:", response.reason)
+    except Exception, e:
+        print e
 
-    # if response.status == 200:
-    #     data = response.read()
-    #     print (data)
-    # else:
-    #     print ("[WARN] Status:", response.status, ", Reason:", response.reason)
-except Exception, e:
-    print e
 
+def get(host, port, url='', params={}, switch=None):
+    request(host, port, url, switch, params, 'GET')
+
+
+def post(host, port, url='', params={}, switch=None):
+    request(host, port, url, switch, params, 'POST')
+
+
+if __name__ == '__main__':
+    params = urllib.urlencode({'number': 12524, 'type': 'issue', 'action': 'show'})
+    print params
+
+    headers = {"Content-type": "application/x-www-form-urlencoded", "Accept": "text/plain"}
+
+    request('tinyzzh.github.io', 80, '/xx.php?', {}, {'name': 'lucy'})
