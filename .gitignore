@@ -10,3 +10,5 @@ out/*
 
 lib/*
 logs/*
+
+venv/*
