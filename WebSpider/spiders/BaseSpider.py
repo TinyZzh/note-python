@@ -6,18 +6,22 @@ from bs4 import BeautifulSoup
 
 
 class BaseSpider:
+    current_url = ''
+
     def id(self):
         raise NotImplementedError("unimplemented method:id()")
 
-    def run(self, url_menu, base_path='./', **kwargs):
+    def run(self, base_url, url_menu='', base_path='./', **kwargs):
         if not os.path.exists(base_path):
             os.makedirs(base_path)
-            
-        menu = self.get_book_menu(url_menu)
+
+        menu = self.get_book_menu("{}/{}".format(base_url, url_menu))
         for index, data in menu.items():
-            _page_url = "{}/{}".format(url_menu, data[0])
+            _page_url = "{}/{}".format(base_url, data[0])
+            self.current_url = _page_url
             _path = "{}/{}_{}.txt".format(base_path, index, data[1])
             self.output(self.text(_page_url).encode("utf-8"), _path)
+            self.current_url = ''
 
     def get_book_menu(self, url_menu):
         raise NotImplementedError("unimplemented method:get_book_menu()")
@@ -32,8 +36,8 @@ class BaseSpider:
         return _content
 
     def text(self, _url):
-        req = requests.get(url=_url)
-        _html = req.content.decode(req.apparent_encoding)
+        req = requests.get(url=_url, headers=self.get_request_headers())
+        _html = req.content.decode(req.apparent_encoding, 'ignore')
         _result = self.get_content(_html)
         return self.replace_content(_result)
 
@@ -44,3 +48,11 @@ class BaseSpider:
         finally:
             os.close(io_file)
         return
+
+    def get_request_headers(self):
+        headers = {'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,image/apng,*/*;q=0.8',
+                   'accept-encoding': 'gzip, deflate, br',
+                   'accept-language': 'zh-CN,zh;q=0.9',
+                   'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)'
+                                 ' Chrome/69.0.3497.81 Safari/537.36'}
+        return headers
