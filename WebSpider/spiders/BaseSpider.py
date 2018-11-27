@@ -9,11 +9,14 @@ class BaseSpider:
     def id(self):
         raise NotImplementedError("unimplemented method:id()")
 
-    def run(self, _url_menu):
-        menu = self.get_book_menu(_url_menu)
+    def run(self, url_menu, base_path='./', **kwargs):
+        if not os.path.exists(base_path):
+            os.makedirs(base_path)
+            
+        menu = self.get_book_menu(url_menu)
         for index, data in menu.items():
-            _page_url = "{}/{}".format(_url_menu, data[0])
-            _path = "{}_{}.txt".format(index, data[1])
+            _page_url = "{}/{}".format(url_menu, data[0])
+            _path = "{}/{}_{}.txt".format(base_path, index, data[1])
             self.output(self.text(_page_url).encode("utf-8"), _path)
 
     def get_book_menu(self, url_menu):
