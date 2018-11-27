@@ -8,7 +8,7 @@ from WebSpider.spiders.BaseSpider import BaseSpider
 
 #
 # @version 2018.11.28
-# 
+#
 class WwwJjshuNetSpider(BaseSpider):
     def id(self):
         return "www.jjshu.net"
@@ -32,3 +32,9 @@ class WwwJjshuNetSpider(BaseSpider):
     def replace_content(self, html):
         _content = super(WwwJjshuNetSpider, self).replace_content(html)
         return _content
+
+    def try_test(self):
+        target = 'https://www.jjshu.net/'
+        spider = WwwJjshuNetSpider()
+        print(spider.run(target, url_menu='/2/2837/index.html', base_path="./xx/"))
+        pass

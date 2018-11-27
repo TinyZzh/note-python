@@ -7,12 +7,15 @@ from bs4 import BeautifulSoup
 from WebSpider.spiders.BaseSpider import BaseSpider
 
 
+#
+# @version 2018.11.27
+#
 class WwwBiQuGeInfoSpider(BaseSpider):
     def id(self):
         return "www.biquge.info"
 
     def get_book_menu(self, url_menu):
-        req = requests.get(url=url_menu)
+        req = requests.get(url=url_menu, headers=self.get_request_headers())
         html = req.content.decode(req.apparent_encoding)
         html_bf = BeautifulSoup(html)
         menu_list = html_bf.select('div#list dl dd a')
@@ -34,3 +37,9 @@ class WwwBiQuGeInfoSpider(BaseSpider):
         pattern = re.compile(r'笔[\S]趣[\S]阁[\S]{15}')
         _content = re.sub(pattern, '', _content)
         return _content
+
+    def try_test(self):
+        target = 'https://www.biquge.info/33_33149'
+        spider = WwwBiQuGeInfoSpider()
+        print(spider.run(target, base_path="./x2/"))
+        pass
