@@ -12,16 +12,20 @@ class BaseSpider:
         raise NotImplementedError("unimplemented method:id()")
 
     def run(self, base_url, url_menu='', base_path='./', **kwargs):
-        if not os.path.exists(base_path):
-            os.makedirs(base_path)
+        try:
+            if not os.path.exists(base_path):
+                os.makedirs(base_path)
 
-        menu = self.get_book_menu("{}/{}".format(base_url, url_menu))
-        for index, data in menu.items():
-            _page_url = "{}/{}".format(base_url, data[0])
-            self.current_url = _page_url
-            _path = "{}/{}_{}.txt".format(base_path, index, data[1])
-            self.output(self.text(_page_url).encode("utf-8"), _path)
-            self.current_url = ''
+            menu = self.get_book_menu("{}/{}".format(base_url, url_menu))
+            for index, data in menu.items():
+                _page_url = "{}/{}".format(base_url, data[0])
+                self.current_url = _page_url
+                _path = "{}/{}_{}.txt".format(base_path, index, data[1])
+                self.output(self.text(_page_url).encode("utf-8"), _path)
+                self.current_url = ''
+                pass
+        except Exception as e:
+            print(e)
 
     def get_book_menu(self, url_menu):
         raise NotImplementedError("unimplemented method:get_book_menu()")
@@ -56,3 +60,6 @@ class BaseSpider:
                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)'
                                  ' Chrome/69.0.3497.81 Safari/537.36'}
         return headers
+
+    def try_test(self):
+        raise NotImplementedError("unimplemented method:try_test()")
