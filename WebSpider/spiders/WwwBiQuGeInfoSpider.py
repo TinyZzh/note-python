@@ -1,4 +1,6 @@
 # -*- coding:UTF-8 -*-
+import re
+
 import requests
 from bs4 import BeautifulSoup
 
@@ -27,6 +29,8 @@ class WwwBiQuGeInfoSpider(BaseSpider):
 
     def replace_content(self, html):
         _content = super(WwwBiQuGeInfoSpider, self).replace_content(html)
-        _content = _content.replace("笔～趣～阁ｗｗｗ.ｂiquge.ｉnfo", "")
         _content = _content.replace('\xa0' * 4, '\n\n')
+        #   示例:笔～趣～阁ｗｗｗ.ｂiquge.ｉnfo
+        pattern = re.compile(r'笔[\S]趣[\S]阁[\S]{15}')
+        _content = re.sub(pattern, '', _content)
         return _content
