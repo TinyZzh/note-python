@@ -1,14 +1,41 @@
 # -*- coding:UTF-8 -*-
 
-import requests
-from bs4 import BeautifulSoup
+import sys
+from threading import Timer
 
-from WebSpider.spiders.WwwBiQuGeInfoSpider import WwwBiQuGeInfoSpider
+from WebSpider.SpiderManager import SpiderManager
+
+
+def _run():
+    try:
+        sm = SpiderManager()
+        spider = sm.get_spider_impl("www.jjshu.net")
+        spider.run(base_url='https://www.jjshu.net', url_menu='/2/2837/index.html', base_path='轮回乐园')
+        pass
+    except Exception as e:
+        pass
+    finally:
+        _submit_next_job()
+    pass
+
+
+def _submit_next_job():
+    t = Timer(60.0, _run)
+    t.start()
+    return
+
+
+def bootstrap():
+    # target = 'https://www.biquge.info/33_33149'
+    # spider = WwwBiQuGeInfoSpider()
+    # print(spider.run(target))
+
+    _run()
+    return 0
+
 
 if __name__ == '__main__':
-    target = 'https://www.biquge.info/33_33149'
-    spider = WwwBiQuGeInfoSpider()
-    print(spider.run(target))
+    sys.exit(bootstrap())
 
     # req = requests.get(url=target)
 
