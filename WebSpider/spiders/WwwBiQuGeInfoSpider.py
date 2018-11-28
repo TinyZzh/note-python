@@ -20,9 +20,9 @@ class WwwBiQuGeInfoSpider(BaseSpider):
         html_bf = BeautifulSoup(html)
         menu_list = html_bf.select('div#list dl dd a')
 
-        _menu = {}
-        for i in range(len(menu_list)):
-            _menu[i] = (menu_list[i]['href'], menu_list[i]['title'])
+        _menu = []
+        for data in menu_list:
+            _menu.append((data['href'], data.text))
         return _menu
 
     def get_content(self, html):

@@ -11,18 +11,23 @@ class BaseSpider:
     def id(self):
         raise NotImplementedError("unimplemented method:id()")
 
-    def run(self, base_url, url_menu='', base_path='./', **kwargs):
+    # @param base_url 基础地址
+    def run(self, base_url: str, url_menu='', base_path='./', offset=0, **kwargs):
         try:
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
 
-            menu = self.get_book_menu("{}/{}".format(base_url, url_menu))
-            for index, data in menu.items():
-                _page_url = "{}/{}".format(base_url, data[0])
-                self.current_url = _page_url
-                _path = "{}/{}_{}.txt".format(base_path, index, data[1])
-                self.output(self.text(_page_url).encode("utf-8"), _path)
-                self.current_url = ''
+            menu_list = self.get_book_menu("{}/{}".format(base_url, url_menu))
+            for index in range(offset, len(menu_list)):
+                _page_url = "{}/{}".format(base_url, menu_list[index][0])
+                _path = "{}/{}_{}.txt".format(base_path, index, menu_list[index][1])
+                try:
+                    self.current_url = _page_url
+                    self.output(self.text(_page_url).encode("utf-8"), _path)
+                except Exception as e:
+                    print(e)
+                finally:
+                    self.current_url = ''
                 pass
         except Exception as e:
             print(e)
