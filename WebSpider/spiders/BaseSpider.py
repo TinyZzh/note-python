@@ -1,26 +1,54 @@
 # -*- coding:UTF-8 -*-
+import configparser
 import os
+import re
 
 import requests
 from bs4 import BeautifulSoup
 
 
 class BaseSpider:
-    current_url = ''
+    # base info
+    name = '',
+    # config file *.ini
+    config = [],
+    config_file_path = '',
+
+    # current calc
+    current_url = '',
+    # 是否正在运行
+    is_running = False
 
     def id(self):
         raise NotImplementedError("unimplemented method:id()")
 
     # @param base_url 基础地址
-    def run(self, base_url: str, url_menu='', base_path='./', offset=0, **kwargs):
+    def run(self, base_url: str, url_menu='', base_path='./', offset=0, node_name=None,
+            config_file_path='./config/config.ini', **kwargs):
+        if self.is_running:
+            print("spider is running. name:{}".format(self.name))
+            return
+        # config
+        self.name = base_path if node_name is None else node_name
+        self.config_file_path = config_file_path
+        self.config = configparser.ConfigParser()
+        self.config.read(config_file_path, 'utf-8')
+
         try:
+            self.is_running = True
             if not os.path.exists(base_path):
                 os.makedirs(base_path)
 
             menu_list = self.get_book_menu("{}/{}".format(base_url, url_menu))
-            for index in range(offset, len(menu_list)):
+            total_size = len(menu_list)
+            cur_index = self._get_cur_index()
+            if cur_index >= total_size:
+                print("cur_index:{} large than total:{}.".format(cur_index, total_size))
+                return
+
+            for index in range(offset, total_size):
                 _page_url = "{}/{}".format(base_url, menu_list[index][0])
-                _path = "{}/{}_{}.txt".format(base_path, index, menu_list[index][1])
+                _path = "{}/{}_{}.txt".format(base_path, index, self._cast_file_name(menu_list[index][1]))
                 # if the output file is exist.
                 if os.path.exists(_path) and os.path.getsize(_path) > 0:
                     continue
@@ -32,8 +60,37 @@ class BaseSpider:
                 finally:
                     self.current_url = ''
                 pass
+            # update config
+            self._update_config(self.name, total_size)
         except Exception as e:
             print(e)
+        finally:
+            self.is_running = False
+        return
+
+    # # #
+    # 转换文件名称. 避免非法字符
+    # # #
+    def _cast_file_name(self, name):
+        if name is None:
+            return ""
+        reg = re.compile(r'[\\/:*?"<>|\r\n]+')
+        ary = reg.findall(name)
+        if ary:
+            for nv in ary:
+                name = name.replace(nv, "_")
+        return name
+
+    def _get_cur_index(self):
+        return self.config.getint(self.name, 'index') if self.config.has_option(self.name, 'index') else 0
+
+    def _update_config(self, source, index):
+        if not self.config.has_section(self.name):
+            self.config.add_section(self.name)
+        self.config.set(self.name, "source", str(source))
+        self.config.set(self.name, "index", str(index))
+        self.config.write(open(self.config_file_path, 'w'))
+        pass
 
     def get_book_menu(self, url_menu):
         raise NotImplementedError("unimplemented method:get_book_menu()")

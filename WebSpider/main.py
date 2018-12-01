@@ -13,7 +13,7 @@ def _run():
         spider.run(base_url='https://www.jjshu.net', url_menu='/2/2837/index.html', base_path='轮回乐园')
         pass
     except Exception as e:
-        pass
+        print(e)
     finally:
         _submit_next_job()
     pass
