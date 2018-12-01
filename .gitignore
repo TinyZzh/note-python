@@ -12,3 +12,8 @@ lib/*
 logs/*
 
 venv/*
+
+*.txt
+
+
+*.pyc
