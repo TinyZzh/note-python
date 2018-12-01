@@ -36,5 +36,5 @@ class WwwJjshuNetSpider(BaseSpider):
     def try_test(self):
         target = 'https://www.jjshu.net/'
         spider = WwwJjshuNetSpider()
-        print(spider.run(target, url_menu='/2/2837/index.html', base_path="./xx/"))
+        print(spider.run(target, url_menu='/2/2837/index.html', output_path="./xx/"))
         pass

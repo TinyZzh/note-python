@@ -41,5 +41,5 @@ class WwwBiQuGeInfoSpider(BaseSpider):
     def try_test(self):
         target = 'https://www.biquge.info/33_33149'
         spider = WwwBiQuGeInfoSpider()
-        print(spider.run(target, base_path="./x2/"))
+        print(spider.run(target, output_path="./x2/"))
         pass

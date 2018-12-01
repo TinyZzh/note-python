@@ -9,8 +9,8 @@ from WebSpider.SpiderManager import SpiderManager
 def _run():
     try:
         sm = SpiderManager()
-        spider = sm.get_spider_impl("www.jjshu.net")
-        spider.run(base_url='https://www.jjshu.net', url_menu='/2/2837/index.html', base_path='轮回乐园')
+        spider = sm.get_spider_impl("www.biquge.info")
+        spider.run(host='https://www.xbiquge6.com/', url_menu='/77_77513/', output_path='轮回乐园')
         pass
     except Exception as e:
         print(e)

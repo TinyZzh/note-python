@@ -22,24 +22,24 @@ class BaseSpider:
     def id(self):
         raise NotImplementedError("unimplemented method:id()")
 
-    # @param base_url 基础地址
-    def run(self, base_url: str, url_menu='', base_path='./', offset=0, node_name=None,
+    # @param host 基础地址
+    def run(self, host: str, url_menu='', output_path='./', offset=0, node_name=None,
             config_file_path='./config/config.ini', **kwargs):
         if self.is_running:
             print("spider is running. name:{}".format(self.name))
             return
         # config
-        self.name = base_path if node_name is None else node_name
+        self.name = output_path if node_name is None else node_name
         self.config_file_path = config_file_path
         self.config = configparser.ConfigParser()
         self.config.read(config_file_path, 'utf-8')
 
         try:
             self.is_running = True
-            if not os.path.exists(base_path):
-                os.makedirs(base_path)
+            if not os.path.exists(output_path):
+                os.makedirs(output_path)
 
-            menu_list = self.get_book_menu("{}/{}".format(base_url, url_menu))
+            menu_list = self.get_book_menu("{}/{}".format(host, url_menu))
             total_size = len(menu_list)
             cur_index = self._get_cur_index()
             if cur_index >= total_size:
@@ -47,8 +47,8 @@ class BaseSpider:
                 return
 
             for index in range(offset, total_size):
-                _page_url = "{}/{}".format(base_url, menu_list[index][0])
-                _path = "{}/{}_{}.txt".format(base_path, index, self._cast_file_name(menu_list[index][1]))
+                _page_url = "{}/{}".format(host, menu_list[index][0])
+                _path = "{}/{}_{}.txt".format(output_path, index, self._cast_file_name(menu_list[index][1]))
                 # if the output file is exist.
                 if os.path.exists(_path) and os.path.getsize(_path) > 0:
                     continue
