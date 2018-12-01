@@ -21,6 +21,9 @@ class BaseSpider:
             for index in range(offset, len(menu_list)):
                 _page_url = "{}/{}".format(base_url, menu_list[index][0])
                 _path = "{}/{}_{}.txt".format(base_path, index, menu_list[index][1])
+                # if the output file is exist.
+                if os.path.exists(_path) and os.path.getsize(_path) > 0:
+                    continue
                 try:
                     self.current_url = _page_url
                     self.output(self.text(_page_url).encode("utf-8"), _path)
@@ -41,7 +44,7 @@ class BaseSpider:
         return str(div_content[0].text)
 
     def replace_content(self, html):
-        _content = html.replace('\xa0' * 4, '\n\n')
+        _content = html.replace('\xa0' * 4, '\n')
         return _content
 
     def text(self, _url):
