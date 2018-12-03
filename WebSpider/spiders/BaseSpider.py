@@ -89,7 +89,8 @@ class BaseSpider:
             self.config.add_section(self.name)
         self.config.set(self.name, "source", str(source))
         self.config.set(self.name, "index", str(index))
-        self.config.write(open(self.config_file_path, 'w'))
+        with open(self.config_file_path, 'w') as file:
+            self.config.write(file)
         pass
 
     def get_book_menu(self, url_menu):
