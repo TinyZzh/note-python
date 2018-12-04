@@ -93,7 +93,7 @@ class BaseSpider:
             self.config.add_section(self.name)
         self.config.set(self.name, "source", str(source))
         self.config.set(self.name, "index", str(index))
-        with open(self.config_file_path, 'w') as file:
+        with open(self.config_file_path, 'w', encoding='utf-8') as file:
             self.config.write(file)
         pass
 
