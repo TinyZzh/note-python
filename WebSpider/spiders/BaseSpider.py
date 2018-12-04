@@ -39,11 +39,15 @@ class BaseSpider:
             if not os.path.exists(output_path):
                 os.makedirs(output_path)
 
-            menu_list = self.get_book_menu("{}/{}".format(host, url_menu))
+            url = "{}/{}".format(host, url_menu)
+            menu_list = self.get_book_menu(url)
             total_size = len(menu_list)
+            if total_size <= 0:
+                print("unknown book menu. url:{}".format(url))
+                return
             cur_index = self._get_cur_index()
             if cur_index >= total_size:
-                print("cur_index:{} large than total:{}.".format(cur_index, total_size))
+                print("book:[{}] completed. cur_index:{} large than total:{}.".format(self.name, cur_index, total_size))
                 return
 
             for index in range(offset, total_size):
