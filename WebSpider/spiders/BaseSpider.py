@@ -1,5 +1,6 @@
 # -*- coding:UTF-8 -*-
 import configparser
+import logging
 import os
 import re
 
@@ -17,7 +18,9 @@ class BaseSpider:
     # current calc
     current_url = '',
     # 是否正在运行
-    is_running = False
+    is_running = False,
+
+    logger = None
 
     def id(self):
         raise NotImplementedError("unimplemented method:id()")
@@ -25,15 +28,15 @@ class BaseSpider:
     # @param host 基础地址
     def run(self, host: str, url_menu='', output_path='./', offset=0, node_name=None,
             config_file_path='./config/config.ini', **kwargs):
-        if self.is_running:
-            print("spider is running. name:{}".format(self.name))
-            return
         # config
         self.name = output_path if node_name is None else node_name
         self.config_file_path = config_file_path
         self.config = configparser.ConfigParser()
         self.config.read(config_file_path, 'utf-8')
 
+        if self.is_running is True:
+            self._logger().info("spider is running. id:{}, name:{}".format(self.id(), self.name))
+            return
         try:
             self.is_running = True
             if not os.path.exists(output_path):
@@ -43,11 +46,12 @@ class BaseSpider:
             menu_list = self.get_book_menu(url)
             total_size = len(menu_list)
             if total_size <= 0:
-                print("unknown book menu. url:{}".format(url))
+                self._logger().info("unknown book menu. url:{}".format(url))
                 return
             cur_index = self._get_cur_index()
             if cur_index >= total_size:
-                print("book:[{}] completed. cur_index:{} large than total:{}.".format(self.name, cur_index, total_size))
+                self._logger().info("book:[{}] completed. cur_index:{} large than total:{}."
+                                    .format(self.name, cur_index, total_size))
                 return
 
             for index in range(offset, total_size):
@@ -60,14 +64,14 @@ class BaseSpider:
                     self.current_url = _page_url
                     self.output(self.text(_page_url).encode("utf-8"), _path)
                 except Exception as e:
-                    print(e)
+                    self._logger().error(e)
                 finally:
                     self.current_url = ''
                 pass
             # update config
             self._update_config(self.name, total_size)
         except Exception as e:
-            print(e)
+            self._logger().error(e)
         finally:
             self.is_running = False
         return
@@ -130,6 +134,11 @@ class BaseSpider:
                    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)'
                                  ' Chrome/69.0.3497.81 Safari/537.36'}
         return headers
+
+    def _logger(self):
+        if self.logger is None:
+            self.logger = logging.getLogger(self.id())
+        return self.logger
 
     def try_test(self):
         raise NotImplementedError("unimplemented method:try_test()")
