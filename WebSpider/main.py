@@ -17,12 +17,12 @@ def _run(data):
     except Exception as e:
         logging.error(e)
     finally:
-        _submit_next_job()
+        _submit_next_job(data)
     pass
 
 
-def _submit_next_job():
-    t = Timer(300.0, _run)
+def _submit_next_job(data):
+    t = Timer(300.0, _run, [data])
     t.start()
     return
 
