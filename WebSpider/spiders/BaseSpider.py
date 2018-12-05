@@ -153,7 +153,7 @@ class BaseSpider:
 
     def _logger(self):
         if self.logger is None:
-            self.logger = logging.getLogger(self.id())
+            self.logger = logging.getLogger(self.__class__.__name__)
         return self.logger
 
     def try_test(self):

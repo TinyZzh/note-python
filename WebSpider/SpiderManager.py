@@ -14,7 +14,12 @@ class SpiderManager():
 
     def register(self, spider):
         if isinstance(spider, BaseSpider.BaseSpider):
-            self.spiders[spider.id()] = spider
+            _id = spider.id()
+            if type(_id) is list:
+                for key in _id:
+                    self.spiders[key] = spider
+            else:
+                self.spiders[_id] = spider
 
     def get_spider_impl(self, url):
         return self.spiders[url]

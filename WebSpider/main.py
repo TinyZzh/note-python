@@ -6,11 +6,13 @@ from threading import Timer
 
 from WebSpider.SpiderManager import SpiderManager
 
+sm = SpiderManager()
+
 
 def _run(data):
-    logging.basicConfig(level='INFO')
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    logging.basicConfig(level='INFO', datefmt="[%Y-%m-%d %H:%M:%S]", format=log_format)
     try:
-        sm = SpiderManager()
         spider = sm.get_spider_impl(data['id'])
         spider.run(**data['config'])
         pass
@@ -32,6 +34,10 @@ def _bootstrap():
         {
             'id': 'www.biqugexsw.com',
             'config': {'host': 'https://www.biqugexsw.com', 'url_menu': '/9_9107/', 'output_path': '余罪'}
+        },
+        {
+            'id': 'www.xbiquge6.com',
+            'config': {'host': 'https://www.xbiquge6.com', 'url_menu': '/79_79241/', 'output_path': '墨唐'}
         }
     ]
     try:

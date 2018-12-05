@@ -11,7 +11,7 @@ from WebSpider.spiders.BaseSpider import BaseSpider
 #
 class WwwBiQuGeInfoSpider(BaseSpider):
     def id(self):
-        return "www.biquge.info"
+        return ["www.biquge.info", "www.xbiquge6.com"]
 
     def _bf4_select_menu(self, bf: BeautifulSoup):
         return bf.select('div#list dl dd a')
