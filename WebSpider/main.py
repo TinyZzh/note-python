@@ -16,22 +16,10 @@ def _run(data):
         pass
     except Exception as e:
         logging.error(e)
-    finally:
-        _submit_next_job(data)
     pass
 
 
-def _submit_next_job(data):
-    t = Timer(300.0, _run, [data])
-    t.start()
-    return
-
-
-def bootstrap():
-    # target = 'https://www.biquge.info/33_33149'
-    # spider = WwwBiQuGeInfoSpider()
-    # print(spider.run(target))
-
+def _bootstrap():
     data = [
         {
             'id': 'www.biquge.info',
@@ -46,14 +34,23 @@ def bootstrap():
             'config': {'host': 'https://www.biqugexsw.com', 'url_menu': '/9_9107/', 'output_path': '余罪'}
         }
     ]
-    pool = Pool(5)
-    pool.map(_run, data)
+    try:
+        pool = Pool(5)
+        pool.map(_run, data)
+    finally:
+        _submit_next_job()
     # _run()
     return 0
 
 
+def _submit_next_job():
+    t = Timer(300.0, _bootstrap)
+    t.start()
+    return
+
+
 if __name__ == '__main__':
-    sys.exit(bootstrap())
+    sys.exit(_bootstrap())
 
     # req = requests.get(url=target)
 
