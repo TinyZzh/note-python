@@ -16,7 +16,7 @@ class WwwJjshuNetSpider(BaseSpider):
     def get_book_menu(self, url_menu):
         req = requests.get(url=url_menu, headers=self.get_request_headers())
         html = req.content.decode(req.apparent_encoding, 'ignore')
-        html_bf = BeautifulSoup(html)
+        html_bf = BeautifulSoup(html, self._bf4_parser())
         menu_list = html_bf.select('div#readerlist ul li a')
 
         _menu = []
@@ -25,7 +25,7 @@ class WwwJjshuNetSpider(BaseSpider):
         return _menu
 
     def get_content(self, html):
-        html_bf = BeautifulSoup(html)
+        html_bf = BeautifulSoup(html, self._bf4_parser())
         div_content = html_bf.find_all('div', id='content')
         return str(div_content[0].text)
 

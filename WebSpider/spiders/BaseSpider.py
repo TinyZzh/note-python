@@ -105,9 +105,14 @@ class BaseSpider:
         raise NotImplementedError("unimplemented method:get_book_menu()")
 
     def get_content(self, html):
-        html_bf = BeautifulSoup(html)
+        html_bf = BeautifulSoup(html, self._bf4_parser())
         div_content = html_bf.find_all('div', id='content')
+        if len(div_content) <= 0:
+            self._logger().error("unknown content. {}".format(html))
         return str(div_content[0].text)
+
+    def _bf4_parser(self):
+        return 'lxml'
 
     def replace_content(self, html):
         _content = html.replace('\xa0' * 4, '\n')
