@@ -102,7 +102,18 @@ class BaseSpider:
         pass
 
     def get_book_menu(self, url_menu):
-        raise NotImplementedError("unimplemented method:get_book_menu()")
+        req = requests.get(url=url_menu, headers=self.get_request_headers())
+        html = req.content.decode(req.apparent_encoding, 'ignore')
+        html_bf = BeautifulSoup(html, self._bf4_parser())
+        menu_list = self._bf4_select_menu(html_bf)
+
+        _menu = []
+        for data in menu_list:
+            _menu.append((data['href'], data.text))
+        return _menu
+
+    def _bf4_select_menu(self, bf: BeautifulSoup):
+        raise NotImplementedError("unimplemented method:_bf_select_menu()")
 
     def get_content(self, html):
         html_bf = BeautifulSoup(html, self._bf4_parser())

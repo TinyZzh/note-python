@@ -40,6 +40,10 @@ def bootstrap():
         {
             'id': 'www.biquge.info',
             'config': {'host': 'https://www.biquge.info/18_18728/', 'output_path': '重生完美时代'}
+        },
+        {
+            'id': 'www.biqugexsw.com',
+            'config': {'host': 'https://www.biqugexsw.com', 'url_menu': '/9_9107/', 'output_path': '余罪'}
         }
     ]
     pool = Pool(5)

@@ -1,7 +1,6 @@
 # -*- coding:UTF-8 -*-
 import re
 
-import requests
 from bs4 import BeautifulSoup
 
 from WebSpider.spiders.BaseSpider import BaseSpider
@@ -14,20 +13,15 @@ class WwwBiQuGeInfoSpider(BaseSpider):
     def id(self):
         return "www.biquge.info"
 
-    def get_book_menu(self, url_menu):
-        req = requests.get(url=url_menu, headers=self.get_request_headers())
-        html = req.content.decode(req.apparent_encoding)
-        html_bf = BeautifulSoup(html, self._bf4_parser())
-        menu_list = html_bf.select('div#list dl dd a')
-
-        _menu = []
-        for data in menu_list:
-            _menu.append((data['href'], data.text))
-        return _menu
+    def _bf4_select_menu(self, bf: BeautifulSoup):
+        return bf.select('div#list dl dd a')
 
     def get_content(self, html):
         html_bf = BeautifulSoup(html, self._bf4_parser())
         div_content = html_bf.find_all('div', id='content')
+        if len(div_content) <= 0:
+            self._logger().error("content is empty. id:{}, name:{}".format(self.id(), self.name))
+            return ""
         return str(div_content[0].text)
 
     def replace_content(self, html):
@@ -42,4 +36,27 @@ class WwwBiQuGeInfoSpider(BaseSpider):
         target = 'https://www.biquge.info/33_33149'
         spider = WwwBiQuGeInfoSpider()
         self._logger().info(spider.run(target, output_path="./x2/"))
+        pass
+
+
+#
+# https://www.biqugexsw.com/9_9107/
+#
+class WwwBiQuGeXswSpider(WwwBiQuGeInfoSpider):
+
+    def id(self):
+        return 'www.biqugexsw.com'
+
+    def _bf4_select_menu(self, bf: BeautifulSoup):
+        _list = []
+        for dd in bf.find("div", 'listmain') \
+                .select('dl > dt')[1] \
+                .find_next_siblings('dd'):
+            _list.append(dd.find('a'))
+        return _list
+
+    def try_test(self):
+        target = 'https://www.biqugexsw.com/9_9107/'
+        spider = WwwBiQuGeInfoSpider()
+        print(spider.run(target, output_path="./x3/"))
         pass
