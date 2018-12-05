@@ -1,26 +1,28 @@
 # -*- coding:UTF-8 -*-
-
+import logging
 import sys
+from multiprocessing.pool import Pool
 from threading import Timer
 
 from WebSpider.SpiderManager import SpiderManager
 
 
-def _run():
+def _run(data):
+    logging.basicConfig(level='INFO')
     try:
         sm = SpiderManager()
-        spider = sm.get_spider_impl("www.biquge.info")
-        spider.run(host='https://www.xbiquge6.com/', url_menu='/77_77513/', output_path='轮回乐园')
+        spider = sm.get_spider_impl(data['id'])
+        spider.run(**data['config'])
         pass
     except Exception as e:
-        print(e)
+        logging.error(e)
     finally:
         _submit_next_job()
     pass
 
 
 def _submit_next_job():
-    t = Timer(60.0, _run)
+    t = Timer(300.0, _run)
     t.start()
     return
 
@@ -30,7 +32,19 @@ def bootstrap():
     # spider = WwwBiQuGeInfoSpider()
     # print(spider.run(target))
 
-    _run()
+    data = [
+        {
+            'id': 'www.biquge.info',
+            'config': {'host': 'https://www.xbiquge6.com/', 'url_menu': '/77_77513/', 'output_path': '轮回乐园'}
+        },
+        {
+            'id': 'www.biquge.info',
+            'config': {'host': 'https://www.biquge.info/18_18728/', 'output_path': '重生完美时代'}
+        }
+    ]
+    pool = Pool(5)
+    pool.map(_run, data)
+    # _run()
     return 0
 
 
