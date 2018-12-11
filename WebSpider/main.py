@@ -1,12 +1,13 @@
 # -*- coding:UTF-8 -*-
 import logging
 import sys
-from multiprocessing.pool import Pool
+from multiprocessing.dummy import Pool as ThreadPool
 from threading import Timer
 
 from WebSpider.SpiderManager import SpiderManager
 
 sm = SpiderManager()
+pool = ThreadPool(5)
 
 
 def _run(data):
@@ -41,7 +42,6 @@ def _bootstrap():
         }
     ]
     try:
-        pool = Pool(5)
         pool.map(_run, data)
     finally:
         _submit_next_job()
