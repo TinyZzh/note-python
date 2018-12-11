@@ -17,9 +17,9 @@ class SpiderManager():
             _id = spider.id()
             if type(_id) is list:
                 for key in _id:
-                    self.spiders[key] = spider
+                    self.spiders[key] = type(spider)
             else:
-                self.spiders[_id] = spider
+                self.spiders[_id] = type(spider)
 
     def get_spider_impl(self, url):
-        return self.spiders[url]
+        return self.spiders[url]()
