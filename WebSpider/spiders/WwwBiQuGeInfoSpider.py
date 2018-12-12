@@ -20,7 +20,7 @@ class WwwBiQuGeInfoSpider(BaseSpider):
         html_bf = BeautifulSoup(html, self._bf4_parser())
         div_content = html_bf.find_all('div', id='content')
         if len(div_content) <= 0:
-            self._logger().error("content is empty. id:{}, name:{}".format(self.id(), self.name))
+            self._logger().error("content is empty. id:{}, name:{}. html:{}".format(self.id(), self.name, html))
             return ""
         return str(div_content[0].text)
 

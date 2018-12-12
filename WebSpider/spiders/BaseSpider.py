@@ -103,6 +103,9 @@ class BaseSpider:
 
     def get_book_menu(self, url_menu):
         req = requests.get(url=url_menu, headers=self.get_request_headers())
+        if req is None or req.status_code != 200:
+            self._logger().error("request error. url:{}, code:{}".format(_url, req.status_code))
+            return
         html = req.content.decode(req.apparent_encoding, 'ignore')
         html_bf = BeautifulSoup(html, self._bf4_parser())
         menu_list = self._bf4_select_menu(html_bf)
@@ -131,6 +134,9 @@ class BaseSpider:
 
     def text(self, _url):
         req = requests.get(url=_url, headers=self.get_request_headers())
+        if req is None or req.status_code != 200:
+            self._logger().error("request error. url:{}, code:{}".format(_url, req.status_code))
+            return
         _html = req.content.decode(req.apparent_encoding, 'ignore')
         _result = self.get_content(_html)
         return self.replace_content(_result)
