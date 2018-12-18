@@ -68,6 +68,7 @@ class BaseSpider:
 
             _count = 0
             for index in range(offset, total_size):
+                _count += 1
                 _page_url = "{}/{}".format(host, menu_list[index][0])
                 _path = "{}/{}_{}.txt".format(output_path, index, self._cast_file_name(menu_list[index][1]))
                 # if the output file is exist.
