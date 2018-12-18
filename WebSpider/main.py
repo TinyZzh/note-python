@@ -1,28 +1,17 @@
 # -*- coding:UTF-8 -*-
 import logging
 import sys
+import time
 from multiprocessing.dummy import Pool as ThreadPool
-from threading import Timer
 
 from WebSpider.SpiderManager import SpiderManager
+from WebSpider.spiders import BaseSpider
 
 sm = SpiderManager()
 pool = ThreadPool(5)
 
 
-def _run(data):
-    log_format = "%(asctime)s - %(levelname)s - %(message)s"
-    logging.basicConfig(level='INFO', datefmt="[%Y-%m-%d %H:%M:%S]", format=log_format)
-    try:
-        spider = sm.get_spider_impl(data['id'])
-        spider.run(**data['config'])
-        pass
-    except Exception as e:
-        logging.error(e)
-    pass
-
-
-def _bootstrap():
+def _start():
     data = [
         {
             'id': 'www.biquge.info',
@@ -41,22 +30,39 @@ def _bootstrap():
             'config': {'host': 'https://www.xbiquge6.com', 'url_menu': '/79_79241/', 'output_path': '墨唐'}
         }
     ]
-    try:
-        pool.map(_run, data)
-    finally:
-        _submit_next_job()
-    # _run()
+    spiders = []
+    for config in data:
+        spider = sm.get_spider_impl(config['id'])
+        spider.init_spider(config['config'])
+        spiders.append(spider)
+
+    while True:
+        for sp in spiders:
+            sp.try_run()
+        # _thread_run(spiders)
+        time.sleep(60)
     return 0
 
 
-def _submit_next_job():
-    t = Timer(300.0, _bootstrap)
-    t.start()
-    return
+def _thread_run(spiders: list):
+    global pool
+    pool.map(_do_run, spiders)
+
+
+def _do_run(spider: BaseSpider):
+    try:
+        spider.try_run()
+        pass
+    except Exception as e:
+        logging.error(e)
+        pass
 
 
 if __name__ == '__main__':
-    sys.exit(_bootstrap())
+    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    logging.basicConfig(level='INFO', datefmt="[%Y-%m-%d %H:%M:%S]", format=log_format)
+
+    sys.exit(_start())
 
     # req = requests.get(url=target)
 

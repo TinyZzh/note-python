@@ -20,10 +20,22 @@ class BaseSpider:
     # 是否正在运行
     is_running = False,
 
-    logger = None
+    logger = None,
+
+    _params = None
 
     def id(self):
         raise NotImplementedError("unimplemented method:id()")
+
+    def init_spider(self, params):
+        self._params = params
+        pass
+
+    def try_run(self):
+        if self._params is None:
+            raise Exception("wrong params:{}".format(self._params))
+        self.run(**self._params)
+        pass
 
     # @param host 基础地址
     def run(self, host: str, url_menu='', output_path='./', offset=0, node_name=None,
@@ -54,6 +66,7 @@ class BaseSpider:
                                     .format(self.name, cur_index, total_size))
                 return
 
+            _count = 0
             for index in range(offset, total_size):
                 _page_url = "{}/{}".format(host, menu_list[index][0])
                 _path = "{}/{}_{}.txt".format(output_path, index, self._cast_file_name(menu_list[index][1]))
@@ -62,14 +75,20 @@ class BaseSpider:
                     continue
                 try:
                     self.current_url = _page_url
-                    self.output(self.text(_page_url).encode("utf-8"), _path)
+                    _text = self.text(_page_url)
+                    if _text is None:
+                        break
+                    self.output(_text.encode("utf-8"), _path)
+                    _count += 1
                 except Exception as e:
                     self._logger().error(e)
                 finally:
                     self.current_url = ''
                 pass
             # update config
-            self._update_config(self.name, total_size)
+            self._update_config(self.name, cur_index + _count)
+            self._logger().info("book:[{}] sync completed. start_index:{}, size:{}, total:{}."
+                                .format(self.name, cur_index, _count, total_size))
         except Exception as e:
             self._logger().error(e)
         finally:
@@ -104,7 +123,7 @@ class BaseSpider:
     def get_book_menu(self, url_menu):
         req = requests.get(url=url_menu, headers=self.get_request_headers())
         if req is None or req.status_code != 200:
-            self._logger().error("request error. url:{}, code:{}".format(_url, req.status_code))
+            self._logger().error("request error. url:{}, code:{}".format(url_menu, req.status_code))
             return
         html = req.content.decode(req.apparent_encoding, 'ignore')
         html_bf = BeautifulSoup(html, self._bf4_parser())
@@ -158,7 +177,7 @@ class BaseSpider:
         return headers
 
     def _logger(self):
-        if self.logger is None:
+        if self.logger:
             self.logger = logging.getLogger(self.__class__.__name__)
         return self.logger
 
