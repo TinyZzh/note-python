@@ -11,7 +11,7 @@ from WebSpider.spiders.BaseSpider import BaseSpider
 #
 class WwwBiQuGeInfoSpider(BaseSpider):
     def id(self):
-        return ["www.biquge.info", "www.xbiquge6.com"]
+        return ["www.biquge.info", "www.xbiquge6.com", "www.biquyun.com", "www.kbiquge.com"]
 
     def _bf4_select_menu(self, bf: BeautifulSoup):
         return bf.select('div#list dl dd a')
@@ -40,6 +40,7 @@ class WwwBiQuGeInfoSpider(BaseSpider):
 
 
 #
+# 第一个<dd>后面是最新章节.   第二个<dd>之后未实际章节内容
 # https://www.biqugexsw.com/9_9107/
 #
 class WwwBiQuGeXswSpider(WwwBiQuGeInfoSpider):
