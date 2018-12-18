@@ -79,7 +79,9 @@ class BaseSpider:
                     if _text is None:
                         break
                     self.output(_text.encode("utf-8"), _path)
-                    _count += 1
+                    self._logger().info("book:[{}] progress:{}/{}, percent:{:.2f}, url:{}."
+                                        .format(self.name, (cur_index + _count), total_size,
+                                                (cur_index + _count) * 100.0 / total_size, _page_url))
                 except Exception as e:
                     self._logger().error(e)
                 finally:
