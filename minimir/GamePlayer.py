@@ -40,6 +40,7 @@ class GamePlayer:
     guajimap: int
     guajitime: datetime
     # ========================== 幻境相关 ===================================
+    # 幻境剩余挑战次数
     hj_num: int
     hj_lvl: int
     hj_top: int
@@ -48,21 +49,22 @@ class GamePlayer:
     mj_lvl: int
     mj_top: int
     # ========================== 押镖相关 ===================================
-    yb_num:int
-    yb_djnum:int
+    yb_num: int
+    yb_djnum: int
     # ========================== 推图相关 ===================================
-    map:int
+    map: int
     # 挑战boss次数
-    mapboss:int
+    mapboss: int
     # ========================== PK相关 ===================================
     # PK剩余次数
-    pknum:int
+    pknum: int
 
     # 称号等级
     title: int
     # 黄金宝箱打开次数
-    bxnum:int
+    bxnum: int
 
+    # ========================== 脚本 ===================================
     # 上次签到时间
     last_sign_in = None
 

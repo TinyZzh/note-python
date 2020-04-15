@@ -54,14 +54,15 @@ class MiniMir:
             pass
         self.player = self.__user_load()
 
-        self.actions.append(SignInAction(self))
         self.actions.append(YbAction(self))
         self.actions.append(BattleAction(self))
         self.actions.append(CityAction(self))
+        self.actions.append(SignInAction(self))
 
         self.start_logic_tick()
         return
 
+    # 加载用户基础数据
     def __user_load(self) -> GamePlayer:
         __player = GamePlayer()
         resp = self.mir_request("user", "load", val=self._account_val)
@@ -97,11 +98,13 @@ class MiniMir:
 
         return __player
 
+    # 逻辑心跳
     def tick(self):
         for action in self.actions:
             try:
                 if isinstance(action, GameAction) and action.evaluate():
                     action.execute()
+                    print("[{}] action:{}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), type(action)))
             except Exception as e:
                 traceback.print_exc()
             pass

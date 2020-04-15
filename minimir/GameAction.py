@@ -37,7 +37,9 @@ class GameAction:
         if self._run_delay <= 0:
             return True
         _timestamp = time.time()
-        if _timestamp - self._last_run_timestamp >= self._run_delay:
+        __offset = _timestamp - self._last_run_timestamp
+        if __offset >= self._run_delay:
+            # print("---------------------- {}, {} ---------------------------".format(type(self), __offset))
             self._last_run_timestamp = _timestamp
             return True
         else:

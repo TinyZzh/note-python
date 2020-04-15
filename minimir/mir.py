@@ -12,7 +12,7 @@ import schedule
 _username = "wus1223"
 _password = "godlike88115"
 host = "http://mir.uuuyx.com/mir/game/do.php"
-_account_md5 = "afe930611ceae9aa1cd4ece060750541"
+_account_md5 = "935992030a7057d2cc5f8bd964694376"
 # 当幻境结束时, 是否启用幻境重置卷
 _enable_use_item_recovery_hj_lvl = True
 # 使用祭坛重置幻境次数
@@ -37,8 +37,8 @@ k_yb = 'yb'
 mir_datas = {
     "hj": 1,
     k_hj_lvl: 231,
-    k_fight_boss_lvl: 17,
-    k_fight_boss_hp: 9000,
+    k_fight_boss_lvl: 18,
+    k_fight_boss_hp: 12000,
     k_min_of_dps: 9999_9999,
     "guaji": 1,
     "boss": 1,
@@ -88,7 +88,7 @@ def _hj_fight():
         is_win = int(_resp['fight']['result']) == 1
         bhp = _resp['fight']['bhp']
         result = "胜利" if is_win else "失败"
-        min_of_dps = mir_datas[k_min_of_dps] = min(mir_datas[k_min_of_dps],  (bhp / _rd) - (_td1 / _rd))
+        min_of_dps = mir_datas[k_min_of_dps] = min(mir_datas[k_min_of_dps], (bhp / _rd) - (_td1 / _rd))
         print("level:{} battle:{}, 差:{}. p_dps:{}. boss dps:{}, round:{}, p_total_dmg:{}, boss_dmg:{}. pre_dps:{},"
               " min_of_dps:{}"
               .format(mir_datas[k_hj_lvl], result, bhp - _td1, _td1 / _rd, _td2 / _rd, _rd, _td1, _td2, (bhp / _rd),
@@ -177,12 +177,12 @@ def _fight_fight():
         # boss的dps
         b_dps = _td2 / _rd
         # 预测胜利的dps和玩家实际dps的差值. 小于0说明战斗成功
-        # 预判大概要提升多少战斗力才能获胜
-        of_dps = r_dps - p_dps
+        # 预判大概要提升多少战斗力才能获胜 = BOSS剩余的HP / 回合数
+        of_dps = left / _rd
         min_of_dps = mir_datas[k_min_of_dps] = min(mir_datas[k_min_of_dps], of_dps)
-        print("level:{} battle:{}. p_dps:{}. boss_dps:{}, round:{}, p_total_dmg:{}, boss_dmg:{},"
-              " left:{}, 预测dps:{}, of_dps:{}, min:{}"
-              .format(mir_datas[k_hj_lvl], res, p_dps, b_dps, _rd, _td1, _td2, left, r_dps, of_dps, min_of_dps))
+        print("boss:{},battle:{},p_dps:{:.2f},boss_dps:{:.2f},round:{:n},ptd:{:n},bd:{:n},"
+              "left:{},of_dps:{:.2f}, min:{:.2f}"
+              .format(mir_datas[k_fight_boss_lvl], res, p_dps, b_dps, _rd, _td1, _td2, left, of_dps, min_of_dps))
     else:
         if not str(_resp['t']).startswith("BOSS战斗尚未结束"):
             print(_resp)
