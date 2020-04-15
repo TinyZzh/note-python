@@ -16,6 +16,8 @@ class BattleAction(GameAction):
     _p_enable_use_boss_item = False
     # 推图BOSS连续失败阀值
     _p_fight_fight_fail_threshold = 1000
+
+    _p_1s_delay_of_rounds = 7
     # ================================ 战报相关 ==============================
     __f_min_of_dps = sys.maxsize
     # 是否战斗中
@@ -57,7 +59,7 @@ class BattleAction(GameAction):
             _td2 = 0
             _rd = float(_resp['fight']['num'])
             # 10回合 = 1秒CD
-            self._run_delay = math.ceil(_rd / 10)
+            self._run_delay = math.ceil(_rd / self._p_1s_delay_of_rounds)
             for __info in _resp['fight']['process']:
                 _d = str.split(__info, "|")
                 if int(_d[0]) == 1:
@@ -102,7 +104,7 @@ class BattleAction(GameAction):
             _btd = 0
             _rd = float(_resp['fight']['num'])
             # 10回合 = 1秒CD
-            self._run_delay = math.ceil(_rd / 10)
+            self._run_delay = math.ceil(_rd / self._p_1s_delay_of_rounds)
             for __info in _resp['fight']['process']:
                 _d = str.split(__info, "|")
                 if int(_d[0]) == 1:
@@ -158,7 +160,7 @@ class BattleAction(GameAction):
             # 战斗回合数
             _rd = float(__fi['num'])
             # 10回合 = 1秒CD
-            self._run_delay = math.ceil(_rd / 10)
+            self._run_delay = math.ceil(_rd / self._p_1s_delay_of_rounds)
             _td1 = 0
             _td2 = 0
             for __info in __fi['process']:
