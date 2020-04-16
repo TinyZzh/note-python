@@ -1,11 +1,6 @@
 # -*- coding:UTF-8 -*-
 
 import configparser
-import ctypes
-import random
-import socket
-import struct
-from datetime import datetime
 from typing import Iterable
 
 #
@@ -36,11 +31,17 @@ class Setting:
     # 指定自动占领的城市类型. 默认无. 避免被攻占
     custom_city_type: int = -1
     # 最大行会挖矿时间. 自动结束挖矿并开启新挖矿. 单位：秒  86400 = 1d
-    max_wk_time: int = 86400
+    max_wk_time: int = 3600
     # 城池优先级
     city_type_weight_index: list = [2, 0, 1, 3, 4]
     # 本次启动的临时客户端IP
     tmp_url_header_local_ip = None
+    # 自动整理背包出售的道具列表. 矿石
+    bag_auto_sell_item_list: list = [219, 220, 221, 222]
+    # 自动使用的道具列表. 1元宝
+    bag_auto_use_item_list: list = [333, 234, 235, 236, 237, 238, 239, 407, 408]
+    # 自动保存的仓库id
+    auto_save_item_ku: int = 1
 
     def __init__(self) -> None:
         super().__init__()
@@ -86,4 +87,3 @@ class Setting:
                 pass
             pass
         pass
-
