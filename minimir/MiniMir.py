@@ -15,9 +15,11 @@ import schedule
 from minimir.BattleAction import BattleAction
 from minimir.CityAction import CityAction
 from minimir.GameAction import GameAction
-from minimir.GamePlayer import GamePlayer
+from minimir.GamePlayer import GamePlayer, BattleProperty
 from minimir.Setting import Setting
 from minimir.SignInAction import SignInAction
+from minimir.TickAction import TickAction
+from minimir.Utils import Utils
 from minimir.YbAction import YbAction
 
 
@@ -64,6 +66,7 @@ class MiniMir:
         self.actions.append(YbAction(self))
         self.actions.append(BattleAction(self))
         self.actions.append(CityAction(self))
+        self.actions.append(TickAction(self))
         self.actions.append(SignInAction(self))
 
         self.start_logic_tick()
@@ -72,38 +75,18 @@ class MiniMir:
     # 加载用户基础数据
     def __user_load(self) -> GamePlayer:
         __player = GamePlayer()
+        __player.unit = BattleProperty()
         resp = self.mir_request("user", "load", val=self._account_val)
         if "user" in resp:
             u = resp["user"]
-            __player.name = u["name"]
-            __player.user_id = u["id"]
-            __player.level = u["lvl"]
-            __player.met = int(u["met"])
-            __player.cbexp = int(u["cbexp"])
-            __player.exp = int(u["exp"])
-            __player.money = int(u["money"])
-            __player.gold = int(u["gold"])
-            __player.redbag = int(u["redbag"])
-            __player.war = int(u["war"])
-            __player.rep = int(u["rep"])
-            __player.is_guaji = bool(u["guaji"])
-            __player.guajimap = int(u["guajimap"])
-            __player.guajitime = datetime.strptime(u["guajitime"], "%Y-%m-%d %H:%M:%S")
-            __player.hj_num = int(u["hj_num"])
-            __player.hj_lvl = int(u["hj_lvl"])
-            __player.hj_top = int(u["hj_top"])
-            __player.mj_num = int(u["mj_num"])
-            __player.mj_lvl = int(u["mj_lvl"])
-            __player.mj_top = int(u["mj_top"])
-            __player.yb_num = int(u["yb_num"])
-            __player.yb_djnum = int(u["yb_djnum"])
-            __player.map = int(u["map"])
-            __player.mapboss = int(u["mapboss"])
-            __player.pknum = int(u["pknum"])
-            __player.title = int(u["title"])
-            __player.bxnum = int(u["bxnum"])
-
+            for field_name, field_val in u.items():
+                Utils.reflect_set_field([__player, __player.unit], field_name, field_val)
+            pass
+        else:
+            raise Exception("获取用户数据失败.")
         return __player
+
+
 
     # 逻辑心跳
     def tick(self):

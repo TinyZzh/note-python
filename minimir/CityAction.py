@@ -27,7 +27,7 @@ class CityAction(GameAction):
             for _city_info in resp['city']:
                 _dict[int(_city_info["cityid"])] = _city_info
                 # 检查是否是自己占领
-                if _city_info['userid'] != self._player.user_id:
+                if _city_info['userid'] != self._player.id:
                     self._cur_city_id = int(_city_info["cityid"])
                 pass
             # 检查是否被攻击

@@ -37,6 +37,15 @@ class GameAction:
     def mir_req(self, module, action, **kargs):
         return self.client().mir_request(module, action, **kargs)
 
+    def use_item(self, tid:int, amount:1):
+        return
+
+    # 整理背包
+    def auto_arrange_bag(self):
+        # 有天赋和系数高的装备自动保存.
+
+        return
+
     #
     #   是否需要等待一段时间?
     #

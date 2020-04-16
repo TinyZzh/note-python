@@ -1,3 +1,4 @@
+import logging
 from datetime import datetime
 
 from minimir import MiniMir
@@ -8,6 +9,7 @@ from minimir.GameAction import GameAction
 # 每日签到
 #
 class SignInAction(GameAction):
+    __logger = logging.getLogger(__name__)
     # 当前签到的日期. 每日最多签到一次
     __cur_sign_date = None
 
@@ -37,8 +39,11 @@ class SignInAction(GameAction):
             p.module_mj_completed = False
             p.module_fight_completed = False
             p.module_pk_completed = False
+            self.__logger.info("=================== 签到成功:{} ====================".format(self.__cur_sign_date))
             pass
-        self.__logger.info("=================== 签到成功:{} =============================".format(self.__cur_sign_date))
+        else:
+            self.__logger.info("=================== 今日已签到:{} ====================".format(self.__cur_sign_date))
+            pass
         return False
 
     def __try_use_hj_item(self) -> bool:
