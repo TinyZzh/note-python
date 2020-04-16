@@ -18,6 +18,7 @@ from minimir.GameAction import GameAction
 from minimir.GamePlayer import GamePlayer
 from minimir.Setting import Setting
 from minimir.SignInAction import SignInAction
+from minimir.YbAction import YbAction
 
 
 class MiniMir:
@@ -60,7 +61,7 @@ class MiniMir:
             pass
         self.player = self.__user_load()
 
-        # self.actions.append(YbAction(self))
+        self.actions.append(YbAction(self))
         self.actions.append(BattleAction(self))
         self.actions.append(CityAction(self))
         self.actions.append(SignInAction(self))
@@ -160,6 +161,12 @@ class MiniMir:
                       "application/vnd."
                       "ms-excel, application/vnd.ms-powerpoint, application/msword, */*"
         }
+        # 简单的伪造IP   - hping3伪造源IP   - REMOTE_ADDR
+        if self.setting.enable_random_client_ip:
+            headers["CLIENT-IP"] = self.setting.tmp_url_header_local_ip
+            headers["X-FORWARDED-FOR"] = self.setting.tmp_url_header_local_ip
+            headers["X-REAL-IP"] = self.setting.tmp_url_header_local_ip
+            pass
         self.__logger.debug("[request] module:{}, action:{}, kargs:{}".format(module, action, kargs))
         r = requests.post("{}?{}".format(self._host, "&".join(_url_extra)), data=_params, headers=headers)
         if r.status_code == requests.codes.ok:
