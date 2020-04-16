@@ -1,4 +1,4 @@
-import time
+import logging
 
 from minimir import MiniMir
 from minimir.GameAction import GameAction
@@ -6,6 +6,7 @@ from minimir.GameAction import GameAction
 
 # 押镖
 class YbAction(GameAction):
+    __logger = logging.getLogger(__name__)
     # 是否正在押镖
     _is_running = False
 
@@ -15,7 +16,7 @@ class YbAction(GameAction):
 
     def evaluate(self) -> bool:
         if self._is_running:
-            return self.try_yield_run()
+            return not self.yield_wait_for()
         else:
             # 非押镖状态. 每次Tick检查一次
             return not self._player.module_yb_completed
@@ -23,7 +24,7 @@ class YbAction(GameAction):
     def execute(self) -> bool:
         if self._is_running:
             self.mir_req("yb", "getitem")
-            print("============== 押镖结束. 领取奖励 ======================")
+            self.__logger.info("============== 押镖结束. 领取奖励 ======================")
             self._run_delay = -1
             pass
 

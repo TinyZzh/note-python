@@ -1,4 +1,5 @@
 # -*- coding:UTF-8 -*-
+import logging
 import math
 import sys
 
@@ -10,14 +11,7 @@ from minimir.GameAction import GameAction
 # BOSS之家
 # 密境
 class BattleAction(GameAction):
-    # 是否允许使用祭坛进度重置幻境. 缺省不启用
-    _p_enable_use_jt_exp = False
-    # 是否允许使用BOSS挑战券增加挑战boss的次数
-    _p_enable_use_boss_item = False
-    # 推图BOSS连续失败阀值
-    _p_fight_fight_fail_threshold = 1000
-
-    _p_1s_delay_of_rounds = 7
+    __logger = logging.getLogger(__name__)
     # ================================ 战报相关 ==============================
     __f_min_of_dps = sys.maxsize
     # 是否战斗中
@@ -26,7 +20,7 @@ class BattleAction(GameAction):
     __fight_fail_count = 0
 
     def evaluate(self) -> bool:
-        if not self.try_yield_run():
+        if self.yield_wait_for():
             return False
         return not self._player.module_hj_completed \
                or not self._player.module_mj_completed \
@@ -50,7 +44,7 @@ class BattleAction(GameAction):
                 self._player.module_hj_completed = True
                 self.__reset_min_of_dps()
                 self._run_delay = -1
-                print("=========================== 幻境结束 ============================================")
+                self.__logger.info("=========================== 幻境结束 ============================================")
             return
         _target_hj_lvl = self._player.hj_lvl + 1
         _resp = self.mir_req("hj", "fight", id=_target_hj_lvl)
@@ -59,7 +53,7 @@ class BattleAction(GameAction):
             _td2 = 0
             _rd = float(_resp['fight']['num'])
             # 10回合 = 1秒CD
-            self._run_delay = math.ceil(_rd / self._p_1s_delay_of_rounds)
+            self._run_delay = math.ceil(_rd / self._config.each_second_delay_of_rounds)
             for __info in _resp['fight']['process']:
                 _d = str.split(__info, "|")
                 if int(_d[0]) == 1:
@@ -71,10 +65,10 @@ class BattleAction(GameAction):
             bhp = _resp['fight']['bhp']
             result = "胜利" if is_win else "LOSE"
             min_of_dps = self.__f_min_of_dps = min(self.__f_min_of_dps, (bhp / _rd) - (_td1 / _rd))
-            print("hj_id:{}.{}, 差:{}. p_dps:{:.2f}. boss dps:{:.2f}, round:{:n}, ptd:{:.2f}, btd:{:.2f}. "
-                  "pre_dps:{:.2f}, min_of_dps:{:.2f}"
-                  .format(self._player.hj_lvl, result, bhp - _td1, _td1 / _rd, _td2 / _rd, _rd, _td1, _td2,
-                          (bhp / _rd), min_of_dps))
+            self.__logger.info("hj_id:{}.{}, 差:{}. p_dps:{:.2f}. boss dps:{:.2f}, round:{:n}, ptd:{:.2f}, btd:{:.2f}."
+                               "pre_dps:{:.2f}, min_of_dps:{:.2f}"
+                               .format(self._player.hj_lvl, result, bhp - _td1, _td1 / _rd, _td2 / _rd, _rd, _td1, _td2,
+                                       (bhp / _rd), min_of_dps))
             # 扣除幻境挑战次数
             self._player.hj_num -= 1
             if is_win:
@@ -83,7 +77,7 @@ class BattleAction(GameAction):
         elif str(_resp['t']).startswith("幻境战斗尚未结束"):
             pass
         else:
-            print(_resp)
+            self.__logger.info(_resp)
         return
 
     # 秘境战斗.
@@ -93,7 +87,7 @@ class BattleAction(GameAction):
             self._player.module_mj_completed = True
             self.__reset_min_of_dps()
             self._run_delay = -1
-            print("=========================== 密境结束 ============================================")
+            self.__logger.info("=========================== 密境结束 ============================================")
             return
         __target_mj_lvl = self._player.mj_lvl + 1
         _resp = self.mir_req("mj", "fight", id=__target_mj_lvl)
@@ -104,7 +98,7 @@ class BattleAction(GameAction):
             _btd = 0
             _rd = float(_resp['fight']['num'])
             # 10回合 = 1秒CD
-            self._run_delay = math.ceil(_rd / self._p_1s_delay_of_rounds)
+            self._run_delay = math.ceil(_rd / self._config.each_second_delay_of_rounds)
             for __info in _resp['fight']['process']:
                 _d = str.split(__info, "|")
                 if int(_d[0]) == 1:
@@ -116,10 +110,10 @@ class BattleAction(GameAction):
             bhp = _resp['fight']['bhp']
             result = "胜利" if is_win else "LOSE"
             min_of_dps = self.__f_min_of_dps = min(self.__f_min_of_dps, (bhp / _rd) - (_ptd / _rd))
-            print("mj_id:{}.{}, 差:{}. p_dps:{:.2f}. boss dps:{:.2f}, round:{:.n}, ptd:{:.2f}, btd:{:.2f}. "
-                  "pre_dps:{:.2f}, min_of_dps:{:.2f}"
-                  .format(self._player.mj_lvl, result, bhp - _ptd, _ptd / _rd, _btd / _rd, _rd, _ptd, _btd,
-                          (bhp / _rd), min_of_dps))
+            self.__logger.info("mj_id:{}.{}, 差:{}. p_dps:{:.2f}. boss dps:{:.2f}, round:{:.n}, ptd:{:.2f}, btd:{:.2f}."
+                               "pre_dps:{:.2f}, min_of_dps:{:.2f}"
+                               .format(self._player.mj_lvl, result, bhp - _ptd, _ptd / _rd, _btd / _rd, _rd, _ptd, _btd,
+                                       (bhp / _rd), min_of_dps))
             # 扣除秘境挑战次数
             self._player.mj_num -= 1
             if is_win:
@@ -130,7 +124,7 @@ class BattleAction(GameAction):
         elif str(_resp['t']).startswith("巅峰后才可以挑战"):
             self._player.module_mj_completed = True
         else:
-            print(_resp)
+            self.__logger.info(_resp)
         return
 
     # VIP扫荡推图BOSS特权
@@ -140,16 +134,16 @@ class BattleAction(GameAction):
     # 推图BOSS战斗. - 优先级最低. 尝试100次战斗, 战斗结果都是失败则说明战斗力不足
     def __fight_fight(self):
         if self._player.mapboss <= 0:
-            if self._p_enable_use_boss_item:
+            if self._config.enable_use_boss_item:
                 # TODO: 自动使用BOSS挑战券增加挑战次数
                 pass
             else:
-                self.__fight_fail_count = self._p_fight_fight_fail_threshold
+                self.__fight_fail_count = self._config.fight_fight_fail_threshold
                 pass
-        if self.__fight_fail_count >= self._p_fight_fight_fail_threshold:
+        if self.__fight_fail_count >= self._config.fight_fight_fail_threshold:
             self._player.module_fight_completed = True
             self._run_delay = -1
-            print("=========================== 推图BOSS结束 ============================================")
+            self.__logger.info("=========================== 推图BOSS结束 ============================================")
             self.mir_req("fight", "guaji", id=self._player.map)
             return
         # 挑战下一张地图
@@ -160,7 +154,7 @@ class BattleAction(GameAction):
             # 战斗回合数
             _rd = float(__fi['num'])
             # 10回合 = 1秒CD
-            self._run_delay = math.ceil(_rd / self._p_1s_delay_of_rounds)
+            self._run_delay = math.ceil(_rd / self._config.each_second_delay_of_rounds)
             _td1 = 0
             _td2 = 0
             for __info in __fi['process']:
@@ -181,25 +175,29 @@ class BattleAction(GameAction):
             res = "胜利" if is_win else "lose"
             p_dps = _td1 / _rd
             b_dps = _td2 / _rd
-            print("map:{}. {}. p_dps:{}. boss_dps:{}, 回合数:{}, ptd:{}, btd:{}"
-                  .format(__target_map, res, p_dps, b_dps, _rd, _td1, _td2))
+            self.__logger.info("map:{}. {}. p_dps:{}. boss_dps:{}, 回合数:{}, ptd:{}, btd:{}"
+                               .format(__target_map, res, p_dps, b_dps, _rd, _td1, _td2))
             pass
         elif str(_resp['t']).startswith("当前状态不可以挑战BOSS，请先取消挂机"):
             self.mir_req("fight", "guajioff")
+            self.__logger.debug(_resp)
             pass
         elif str(_resp['t']).startswith("挑战BOSS剩余次数不足"):
-            if self._p_enable_use_boss_item:
+            if self._config.enable_use_boss_item:
                 # self.mir_req("fight", "guajioff")
                 # TODO: 使用boss挑战卷道具增加次数
                 pass
-            self.__fight_fail_count = self._p_fight_fight_fail_threshold
+            self.__fight_fail_count = self._config.fight_fight_fail_threshold
+            self.__logger.debug(_resp)
         elif str(_resp['t']).startswith("转生太低"):
             # 无法挑战. 直接结束
-            self.__fight_fail_count = self._p_fight_fight_fail_threshold
+            self.__fight_fail_count = self._config.fight_fight_fail_threshold
+            self.__logger.debug(_resp)
         elif str(_resp['t']).startswith("BOSS战斗尚未结束"):
+            self.__logger.debug(_resp)
             pass
         else:
-            print(_resp)
+            self.__logger.info(_resp)
             pass
         return
 
@@ -212,7 +210,7 @@ class BattleAction(GameAction):
             _resp = self.mir_req("jt", "getcz")
             if str(_resp['t']).startswith("今天已经领取过重置了"):
                 # 3. 使用祭坛进度重置
-                if self._p_enable_use_jt_exp:
+                if self._config.enable_use_jt_exp:
                     _resp = self.mir_req("jt", "load")
                     if int(_resp['b']) == 1:
                         if int(_resp['jt']['jt_exp']) >= 1000:
@@ -233,13 +231,13 @@ class BattleAction(GameAction):
     def __hj_reset(self):
         self._player.hj_lvl = 0
         self._player.hj_num = 1000
-        print("======================== 幻境重置成功 ==============================")
+        self.__logger.info("======================== 幻境重置成功 ==============================")
         return
 
     def __mj_reset(self):
         self._player.mj_lvl = 0
         self._player.mj_num = 1000
-        print("======================== 秘境重置成功 ==============================")
+        self.__logger.info("======================== 秘境重置成功 ==============================")
         return
 
     def __reset_min_of_dps(self):

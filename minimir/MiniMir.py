@@ -1,8 +1,8 @@
 # -*- coding:UTF-8 -*-
 import hashlib
+import logging
 import threading
 import time
-import traceback
 from datetime import datetime
 from queue import Queue
 
@@ -16,11 +16,13 @@ from minimir.BattleAction import BattleAction
 from minimir.CityAction import CityAction
 from minimir.GameAction import GameAction
 from minimir.GamePlayer import GamePlayer
+from minimir.Setting import Setting
 from minimir.SignInAction import SignInAction
-from minimir.YbAction import YbAction
 
 
 class MiniMir:
+    __logger = logging.getLogger(__name__)
+
     # md5(1079296108 + BFEBFBFF + 000306C3)  => d43228ea4953279321578cc6a4dc18f8
     _base_secret = 'd43228ea4953279321578cc6a4dc18f8'
 
@@ -29,6 +31,8 @@ class MiniMir:
     _account_md5 = None
     _account_val = None
     player: GamePlayer
+    # 挂机设置
+    setting: Setting
 
     actions = []
 
@@ -39,6 +43,8 @@ class MiniMir:
         self._account_md5 = md5
         self._account_val = val
         super().__init__()
+        self.setting = Setting()
+        self.setting.load_setting()
 
     # 登录游戏
     def login(self, user, psw):
@@ -54,7 +60,7 @@ class MiniMir:
             pass
         self.player = self.__user_load()
 
-        self.actions.append(YbAction(self))
+        # self.actions.append(YbAction(self))
         self.actions.append(BattleAction(self))
         self.actions.append(CityAction(self))
         self.actions.append(SignInAction(self))
@@ -103,10 +109,11 @@ class MiniMir:
         for action in self.actions:
             try:
                 if isinstance(action, GameAction) and action.evaluate():
+                    ___now___ = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+                    self.__logger.debug("action:{} start:{}".format(___now___, type(action)))
                     action.execute()
-                    print("[{}] action:{}".format(datetime.now().strftime("%Y-%m-%d %H:%M:%S"), type(action)))
             except Exception as e:
-                traceback.print_exc()
+                self.__logger.exception(e)
             pass
         return
 
@@ -153,12 +160,12 @@ class MiniMir:
                       "application/vnd."
                       "ms-excel, application/vnd.ms-powerpoint, application/msword, */*"
         }
-        print("[request] module:{}, action:{}, kargs:{}".format(module, action, kargs))
+        self.__logger.debug("[request] module:{}, action:{}, kargs:{}".format(module, action, kargs))
         r = requests.post("{}?{}".format(self._host, "&".join(_url_extra)), data=_params, headers=headers)
         if r.status_code == requests.codes.ok:
             resp = r.json()
             # if resp['b'] != 1:
-            #     print(resp)
+            #     self.__logger.debug(resp)
             return resp
         else:
             r.raise_for_status()

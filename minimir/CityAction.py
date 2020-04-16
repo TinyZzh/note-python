@@ -5,10 +5,6 @@ from minimir.GameAction import GameAction
 
 
 class CityAction(GameAction):
-    # 指定自动占领的城市类型. 默认无. 避免被攻占
-    _p_custom_city_type = -1
-    # 城池优先级
-    _p_city_type_weight_index = [2, 0, 1, 3, 4]
     # ============================== 城池争夺 ======================================
     # 当前占领的城市
     _cur_city_id = -1
@@ -20,8 +16,7 @@ class CityAction(GameAction):
         self._run_delay = 180
 
     def evaluate(self) -> bool:
-        # 间隔3分钟检查一次
-        return self.try_yield_run()
+        return not self.yield_wait_for()
 
     def execute(self) -> bool:
         resp = self.mir_req("city", "load", time="")
@@ -42,14 +37,14 @@ class CityAction(GameAction):
             if self._cur_city_id > 0:
                 return
 
-            if self._p_custom_city_type > 0:
+            if self._config.custom_city_type > 0:
                 for p_city_id_offset in range(1, 8):
-                    p_city_id = self._p_custom_city_type * 8 + p_city_id_offset
+                    p_city_id = self._config.custom_city_type * 8 + p_city_id_offset
                     if p_city_id not in _dict:
                         # 占领空城池
                         self._city_pk(p_city_id)
             else:
-                for ct in self._p_city_type_weight_index:
+                for ct in self._config.city_type_weight_index:
                     for p_city_id_offset in range(1, 8):
                         p_city_id = ct * 8 + p_city_id_offset
                         if p_city_id not in _dict:
