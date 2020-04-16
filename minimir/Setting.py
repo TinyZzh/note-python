@@ -37,7 +37,7 @@ class Setting:
                 'enable_use_boss_item',
                 'enable_use_hj_item',
                 'fight_fight_fail_threshold',
-                '1s_delay_of_rounds',
+                'each_second_delay_of_rounds',
                 'custom_city_type',
                 'city_type_weight_index',
             ])

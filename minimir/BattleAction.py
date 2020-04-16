@@ -120,9 +120,11 @@ class BattleAction(GameAction):
                 self._player.mj_lvl += 1
                 self.__reset_min_of_dps()
         elif str(_resp['t']).startswith("秘境战斗尚未结束"):
+            self.__logger.info(_resp)
             pass
         elif str(_resp['t']).startswith("巅峰后才可以挑战"):
             self._player.module_mj_completed = True
+            self.__logger.info(_resp)
         else:
             self.__logger.info(_resp)
         return
@@ -175,7 +177,7 @@ class BattleAction(GameAction):
             res = "胜利" if is_win else "lose"
             p_dps = _td1 / _rd
             b_dps = _td2 / _rd
-            self.__logger.info("map:{}. {}. p_dps:{}. boss_dps:{}, 回合数:{}, ptd:{}, btd:{}"
+            self.__logger.info("map:{} - {}. p_dps:{:.2f}. boss_dps:{:.2f}, 回合数:{:n}, ptd:{:.2f}, btd:{:.2f}"
                                .format(__target_map, res, p_dps, b_dps, _rd, _td1, _td2))
             pass
         elif str(_resp['t']).startswith("当前状态不可以挑战BOSS，请先取消挂机"):
@@ -194,7 +196,7 @@ class BattleAction(GameAction):
             self.__fight_fail_count = self._config.fight_fight_fail_threshold
             self.__logger.debug(_resp)
         elif str(_resp['t']).startswith("BOSS战斗尚未结束"):
-            self.__logger.debug(_resp)
+            self.__logger.info(_resp)
             pass
         else:
             self.__logger.info(_resp)
