@@ -45,6 +45,9 @@ class BattleAction(GameAction):
                 self.__reset_min_of_dps()
                 self._run_delay = -1
                 self.__logger.info("=========================== 幻境结束 ============================================")
+                pass
+            else:
+                self._player.module_hj_completed = False
             return
         _target_hj_lvl = self._player.hj_lvl + 1
         _resp = self.mir_req("hj", "fight", id=_target_hj_lvl)
@@ -207,10 +210,10 @@ class BattleAction(GameAction):
     def __try_reset_hj(self) -> bool:
         # 1. 重置昨日
         _resp = self.mir_req("jt", "getczbl")
-        if str(_resp['t']).startswith("昨日已经领取过重置了"):
+        if int(_resp['b']) != 1:
             # 2. 重置今日
             _resp = self.mir_req("jt", "getcz")
-            if str(_resp['t']).startswith("今天已经领取过重置了"):
+            if int(_resp['b']) != 1:
                 # 3. 使用祭坛进度重置
                 if self._config.enable_use_jt_exp:
                     _resp = self.mir_req("jt", "load")

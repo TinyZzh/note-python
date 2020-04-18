@@ -1,10 +1,11 @@
 # -*- coding:UTF-8 -*-
 import logging
 import time
-from typing import List
+from typing import List, Dict
 
 from minimir import MiniMir, Setting, Struct
 from minimir.GamePlayer import GamePlayer
+from minimir.Struct import ItemInfo
 from minimir.Utils import Utils
 
 
@@ -42,10 +43,27 @@ class GameAction:
     def use_item(self, tid: int, amount: 1):
         return
 
+    # 初始化玩家身上的装备
+    def refresh_body_item(self):
+        seats: Dict[int, ItemInfo] = {}
+        resp = self.mir_req("item", "loaditem", type=3, ku=0)
+        if resp is not None and "b" in resp and resp['b'] == 1:
+            for _ri in resp['item']:
+                _info = Struct.ItemInfo()
+                for fn, fv in _ri.items():
+                    Utils.reflect_set_field([_info], fn, fv)
+                    pass
+                seats[_info.seat] = _info
+                pass
+            self._player.body_item = seats
+            pass
+        return
+
     # 整理背包  -   有天赋和系数高的装备自动保存到仓库
     def auto_arrange_bag(self):
         self.__logger.info("=================== 自动整理背包 =======================")
         # 玩家身上的装备
+        self.refresh_body_item()
         # resp = self.mir_req("item", "loaditem", type=3, ku=0)
         # 仓库
         # resp = self.mir_req("item", "loaditem", type=2, ku=1)
@@ -59,6 +77,7 @@ class GameAction:
                 _info = Struct.ItemInfo()
                 for fn, fv in _ri.items():
                     Utils.reflect_set_field([_info], fn, fv)
+                    pass
                 _item_ary.append(_info)
                 # 检查自动出售道具
                 if _info.itemid in self._config.bag_auto_sell_item_list:

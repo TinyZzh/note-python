@@ -11,10 +11,15 @@
 #   世界Boss      |
 #   劫镖          |
 #
+from dataclasses import dataclass
 from datetime import datetime
-
-
 # 战斗属性
+from typing import Dict
+
+from minimir.Struct import ItemInfo
+
+
+@dataclass()
 class BattleProperty:
     zhp: int = 0
     zmp: int = 0
@@ -38,8 +43,8 @@ class BattleProperty:
     # 速度
     speed: int = 0
 
-    def __init__(self) -> None:
-        super().__init__()
+    # def __init__(self) -> None:
+    #     super().__init__()
 
 
 # 玩家数据
@@ -96,6 +101,9 @@ class GamePlayer:
     wk_lvl: int = 0
     # 战斗属性
     unit: BattleProperty = BattleProperty()
+    # 身上穿戴的装备
+    #
+    body_item: Dict[int, ItemInfo]
 
     # ========================== 脚本 ===================================
     # 上次签到时间

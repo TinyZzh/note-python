@@ -15,6 +15,7 @@ class YbAction(GameAction):
         self._run_delay = 100
 
     def evaluate(self) -> bool:
+        self.auto_arrange_bag()
         if self._is_running:
             return not self.yield_wait_for()
         else:

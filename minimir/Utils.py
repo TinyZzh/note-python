@@ -4,7 +4,10 @@ import random
 import socket
 import struct
 from datetime import datetime
+from functools import reduce
 from typing import Any
+
+from minimir.Struct import ItemInfo
 
 
 class Utils:
@@ -66,3 +69,46 @@ class Utils:
     @staticmethod
     def to_datetime_str(dt: datetime) -> str:
         return datetime.strftime(dt, "%Y-%m-%d %H:%M:%S")
+
+    #
+    # item0是否比item1更好
+    #
+    @staticmethod
+    def cmp_item(job: int, item0: ItemInfo, item1: ItemInfo, telnet_first: bool = True) -> bool:
+        _cfg0 = []
+        _cfg1 = []
+        # 装备0的总评分
+        _i0_score = 0
+        # 装备1的总评分
+        _i1_score = 0
+        _cmp_result = 0
+        # 1. 幸运、速度
+        if item0.x6 > item1.x6 or item0.x7 > item1.x7:
+            return True
+
+        # 2. 天赋优先.  天赋的占比增高
+        # if item0.g1 == 2 and item1.g1 == 2:
+        #     return item0.g2 > item1.g2
+        # elif item0.g1 == 2:
+        #     return True
+        # elif item1.g1 == 2:
+        #     return False
+        _g_type = 4 if job == 1 else 2 if job == 2 else 3
+        _offset = item0.g2 - item1.g2 if item0.g1 == _g_type and item1.g1 == _g_type else \
+            item0.g1 if item0.g1 == _g_type else \
+                -item1.g1 if item1.g1 == _g_type else 0
+        if _offset != 0:
+            return _offset > 0
+
+        # 3. 系数 + 基础属性
+        # 根据职业的攻击属性
+        _attr_list = [0, 1] if job == 1 else [2, 3] if job == [4, 5] else 3
+        # 防御、魔防
+        _attr_list.extend([6, 7, 8, 9])
+        _at0 = list(map(lambda i: _cfg0[i], _attr_list))
+        _at0.extend((item0.x1, item0.x4, item0.x5))
+        _attr0 = reduce(lambda x, y: x + y, _at0)
+        _at1 = list(map(lambda i: _cfg1[i], _attr_list))
+        _at1.extend((item1.x1, item1.x4, item1.x5))
+        _attr1 = reduce(lambda x, y: x + y, _at1)
+        return _attr0 > _attr1
