@@ -1,6 +1,7 @@
 # -*- coding:UTF-8 -*-
 
 import configparser
+from datetime import datetime
 from typing import Iterable
 
 #
@@ -51,17 +52,23 @@ class Setting:
         _config.read('conf/setting.ini', 'utf-8')
         _section = "default"
         if _config.has_section(_section):
-            # bool
-            self.__reflection_set_property_value(_config, _section, [
-                'enable_random_client_ip',
-                'enable_use_jt_exp',
-                'enable_use_boss_item',
-                'enable_use_hj_item',
-                'fight_fight_fail_threshold',
-                'each_second_delay_of_rounds',
-                'custom_city_type',
-                'city_type_weight_index',
-            ])
+            _annotations = self.__annotations__
+            for r in _config.items(_section):
+                field_name = r[0]
+                field_val = r[1]
+                if field_name in _annotations:
+                    if _annotations[field_name] == bool:
+                        _val = True if "1" == field_val or "true" == str(field_val).lower() else False
+                    elif _annotations[field_name] == int:
+                        _val = int(field_val)
+                    elif _annotations[field_name] == float:
+                        _val = float(field_val)
+                    elif _annotations[field_name] == datetime:
+                        _val = datetime.strptime(field_val, "%Y-%m-%d %H:%M:%S")
+                    else:
+                        _val = field_val
+                    setattr(self, field_name, _val)
+                pass
             pass
         if self.enable_random_client_ip:
             self.tmp_url_header_local_ip = Utils.get_random_ip()
