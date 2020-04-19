@@ -22,10 +22,10 @@ class GameAction:
     _last_run_timestamp = -1
     _run_delay = -1
 
-    def __init__(self, client: MiniMir) -> None:
+    def __init__(self, client: MiniMir, p: GamePlayer) -> None:
         super().__init__()
         self._m_client = client
-        self._player = client.player
+        self._player = p
         self._config = client.setting
 
     def evaluate(self) -> bool:
@@ -38,7 +38,7 @@ class GameAction:
         return self._m_client
 
     def mir_req(self, module, action, **kargs):
-        return self.client().mir_request(module, action, **kargs)
+        return self._player.mir_request(module, action, **kargs)
 
     def use_item(self, tid: int, amount: 1):
         return

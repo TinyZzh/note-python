@@ -1,6 +1,6 @@
 import time
 
-from minimir import MiniMir
+from minimir import MiniMir, GamePlayer
 from minimir.GameAction import GameAction
 
 
@@ -11,8 +11,8 @@ class CityAction(GameAction):
     # 上一次检查城市的时间戳. 每间隔3分钟检查一次城池的状态
     _time_last_check = -1
 
-    def __init__(self, client: MiniMir) -> None:
-        super().__init__(client)
+    def __init__(self, client: MiniMir, p: GamePlayer) -> None:
+        super().__init__(client, p)
         self._run_delay = 180
 
     def evaluate(self) -> bool:

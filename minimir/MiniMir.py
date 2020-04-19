@@ -6,7 +6,6 @@ import time
 from datetime import datetime
 from queue import Queue
 
-import requests
 import schedule
 
 #
@@ -18,6 +17,7 @@ from minimir.GameAction import GameAction
 from minimir.GamePlayer import GamePlayer, BattleProperty
 from minimir.Setting import Setting
 from minimir.SignInAction import SignInAction
+from minimir.Struct import AccountConfig
 from minimir.TickAction import TickAction
 from minimir.Utils import Utils
 from minimir.YbAction import YbAction
@@ -26,14 +26,7 @@ from minimir.YbAction import YbAction
 class MiniMir:
     __logger = logging.getLogger(__name__)
 
-    # md5(1079296108 + BFEBFBFF + 000306C3)  => d43228ea4953279321578cc6a4dc18f8
-    _base_secret = 'd43228ea4953279321578cc6a4dc18f8'
-
-    _host = ""
-    # 登录之后获取
-    _account_md5 = None
-    _account_val = None
-    player: GamePlayer
+    host = ""
     # 挂机设置
     setting: Setting
 
@@ -41,42 +34,40 @@ class MiniMir:
 
     _job_queue = Queue()
 
-    def __init__(self, host, md5: str = None, val: str = None) -> None:
-        self._host = host
-        self._account_md5 = md5
-        self._account_val = val
+    def __init__(self, host: str, setting: Setting) -> None:
+        self.host = host
+        self.setting = setting
         super().__init__()
-        self.setting = Setting()
-        self.setting.load_setting()
 
     # 登录游戏
-    def login(self, user, psw):
-        if self._account_md5 is None:
-            # TODO 未实现逻辑 - 秘钥混淆逻辑目前暂时还未破解
-            _cur_timestamp = time.time()
-            # val = md5(密码 + var + 时间戳)  => 123456d43228ea4953279321578cc6a4dc18f81586344509
-            val = self.gen_md5(bytes("{}{}{}".format(psw, self._base_secret, _cur_timestamp), "utf-8"))
-            resp = self.mir_request("account", "login", username=user, password=psw,
-                                    val=val, var=self._base_secret,
-                                    t=_cur_timestamp, without_md5=1)
-            self._account_md5 = resp['md5']
-            pass
-        self.player = self.__user_load()
-
-        self.actions.append(YbAction(self))
-        self.actions.append(BattleAction(self))
-        self.actions.append(CityAction(self))
-        self.actions.append(TickAction(self))
-        self.actions.append(SignInAction(self))
+    def login(self, _ac: AccountConfig):
+        player = self.__user_load(_ac)
+        self.actions.append(YbAction(self, player))
+        self.actions.append(BattleAction(self, player))
+        self.actions.append(CityAction(self, player))
+        self.actions.append(TickAction(self, player))
+        self.actions.append(SignInAction(self, player))
 
         self.start_logic_tick()
         return
 
     # 加载用户基础数据
-    def __user_load(self) -> GamePlayer:
-        __player = GamePlayer()
+    def __user_load(self, acc_config: AccountConfig) -> GamePlayer:
+        __player = GamePlayer(self, acc_config)
+        if acc_config is not None and acc_config.m_md5 is None:
+            # TODO 未实现逻辑 - 秘钥混淆逻辑目前暂时还未破解
+            _cur_timestamp = time.time()
+            # val = md5(密码 + var + 时间戳)  => 123456d43228ea4953279321578cc6a4dc18f81586344509
+            val = self.gen_md5(
+                bytes("{}{}{}".format(acc_config.m_psw, self._base_secret, _cur_timestamp), "utf-8"))
+            resp = __player.mir_request("account", "login", username=acc_config.m_user, password=acc_config.m_psw,
+                                        val=val, var=self._base_secret,
+                                        t=_cur_timestamp, without_md5=1)
+            acc_config.m_md5 = resp['md5']
+            pass
+
         __player.unit = BattleProperty()
-        resp = self.mir_request("user", "load", val=self._account_val)
+        resp = __player.mir_request("user", "load", val=acc_config.m_val)
         if "user" in resp:
             u = resp["user"]
             for field_name, field_val in u.items():
@@ -85,8 +76,6 @@ class MiniMir:
         else:
             raise Exception("获取用户数据失败.")
         return __player
-
-
 
     # 逻辑心跳
     def tick(self):
@@ -119,47 +108,6 @@ class MiniMir:
             job_func()
             self._job_queue.task_done()
         pass
-
-    # 调用接口
-    def mir_request(self, module, action, **kargs):
-        _params = {}
-        _params = kargs if kargs is not None else {}
-        _params["m"] = module
-        _params["a"] = action
-        if "without_md5" in kargs:
-            del _params["without_md5"]
-        else:
-            _params["md5"] = self._account_md5
-            pass
-
-        _url_extra = []
-        for k, v in kargs.items():
-            _url_extra.append("{}={}".format(k, v))
-            pass
-
-        headers = {
-            "Content-Type": "application/x-www-form-urlencoded",
-            "User-Agent": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",
-            "Accept": "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, "
-                      "application/vnd."
-                      "ms-excel, application/vnd.ms-powerpoint, application/msword, */*"
-        }
-        # 简单的伪造IP   - hping3伪造源IP   - REMOTE_ADDR
-        if self.setting.enable_random_client_ip:
-            headers["CLIENT-IP"] = self.setting.tmp_url_header_local_ip
-            headers["X-FORWARDED-FOR"] = self.setting.tmp_url_header_local_ip
-            headers["X-REAL-IP"] = self.setting.tmp_url_header_local_ip
-            pass
-        self.__logger.debug("[request] module:{}, action:{}, kargs:{}".format(module, action, kargs))
-        r = requests.post("{}?{}".format(self._host, "&".join(_url_extra)), data=_params, headers=headers)
-        if r.status_code == requests.codes.ok:
-            resp = r.json()
-            # if resp['b'] != 1:
-            #     self.__logger.debug(resp)
-            return resp
-        else:
-            r.raise_for_status()
-        return
 
     def gen_md5(self, data):
         hl = hashlib.md5()

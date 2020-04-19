@@ -1,6 +1,6 @@
 import logging
 
-from minimir import MiniMir
+from minimir import MiniMir, GamePlayer
 from minimir.GameAction import GameAction
 
 
@@ -10,12 +10,11 @@ class YbAction(GameAction):
     # 是否正在押镖
     _is_running = False
 
-    def __init__(self, client: MiniMir) -> None:
-        super().__init__(client)
+    def __init__(self, client: MiniMir, p: GamePlayer) -> None:
+        super().__init__(client, p)
         self._run_delay = 100
 
     def evaluate(self) -> bool:
-        self.auto_arrange_bag()
         if self._is_running:
             return not self.yield_wait_for()
         else:

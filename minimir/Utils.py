@@ -5,7 +5,7 @@ import socket
 import struct
 from datetime import datetime
 from functools import reduce
-from typing import Any
+from typing import Any, Callable, List
 
 from minimir.Struct import ItemInfo
 
@@ -74,7 +74,7 @@ class Utils:
     # item0是否比item1更好
     #
     @staticmethod
-    def cmp_item(job: int, item0: ItemInfo, item1: ItemInfo, telnet_first: bool = True) -> bool:
+    def cmp_item(job: int, item0: ItemInfo, item1: ItemInfo) -> bool:
         _cfg0 = []
         _cfg1 = []
         # 装备0的总评分
@@ -100,15 +100,26 @@ class Utils:
         if _offset != 0:
             return _offset > 0
 
-        # 3. 系数 + 基础属性
+        # 3. 检查装备的总属性收益 = 系数 + 基础属性
+        _sum_xs_: Callable[[int, ItemInfo], List] = lambda j, i: (
+            i.x1 if j == 1 else i.x2 if j == 2 else i.x3, i.x4, i.x5)
+        _plus: Callable[[int, int], int] = lambda x, y: x + y
         # 根据职业的攻击属性
-        _attr_list = [0, 1] if job == 1 else [2, 3] if job == [4, 5] else 3
+        _attr_list = [0, 1] if job == 1 else [2, 3] if job == 2 else [4, 5]
         # 防御、魔防
         _attr_list.extend([6, 7, 8, 9])
         _at0 = list(map(lambda i: _cfg0[i], _attr_list))
-        _at0.extend((item0.x1, item0.x4, item0.x5))
-        _attr0 = reduce(lambda x, y: x + y, _at0)
+        _at0.extend(_sum_xs_(job, item0))
+        _attr0 = reduce(_plus, _at0)
         _at1 = list(map(lambda i: _cfg1[i], _attr_list))
-        _at1.extend((item1.x1, item1.x4, item1.x5))
-        _attr1 = reduce(lambda x, y: x + y, _at1)
+        _at1.extend(_sum_xs_(job, item1))
+        _attr1 = reduce(_plus, _at1)
+        if _attr0 == _attr1:
+            # 4. 主属性收益 = 职业的攻击主属性
+
+            _xs0_ = reduce(_plus, _sum_xs_(job, item0))
+            _xs1_ = reduce(_plus, _sum_xs_(job, item1))
+            # 5. 属性相同, 系数低的优先 - 成长空间大
+            if _xs0_ < _xs1_:
+                return True
         return _attr0 > _attr1

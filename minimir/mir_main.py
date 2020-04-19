@@ -1,6 +1,7 @@
 import logging
 
 from minimir.MiniMir import MiniMir
+from minimir.Setting import Setting
 
 if __name__ == "__main__":
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
@@ -11,7 +12,17 @@ if __name__ == "__main__":
     logging.basicConfig(handlers=__logger_handlers, level='DEBUG', datefmt="[%Y-%m-%d %H:%M:%S]", format=log_format)
     logging.getLogger('schedule').level = logging.WARNING
 
-    game = MiniMir(host="http://mir.uuuyx.com/mir/game/do.php", md5="1e7b0a0526b4cc9ca288e4b14ce21a3f",
-                   val="8dbaa6fa781f35975f6c4e9baf630698")
-    game.login("wus1223", "godlike88115")
+    try:
+        _setting = Setting()
+        _accounts = _setting.load_setting()
+
+        game = MiniMir(host="http://mir.uuuyx.com/mir/game/do.php", setting=_setting)
+        for _ac in _accounts:
+            try:
+                game.login(_ac)
+            except Exception as e:
+                logging.exception("ac:{} login failure.".format(_ac), e)
+            pass
+    except Exception as e:
+        logging.exception(e)
     pass

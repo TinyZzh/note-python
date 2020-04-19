@@ -2,6 +2,7 @@
 import logging
 import math
 import sys
+from typing import List, Callable
 
 from minimir.GameAction import GameAction
 
@@ -28,16 +29,20 @@ class BattleAction(GameAction):
 
     def execute(self) -> bool:
         # 幻境 - 秘境 - 推图BOSS - PK -
-        if not self._player.module_hj_completed:
-            self.__hj_fight()
-        elif not self._player.module_mj_completed:
-            self.__mj_fight()
-        elif not self._player.module_fight_completed:
-            self.__fight_fight()
+        _battles: List[Callable] = [
+            self.__hj_fight,
+            self.__mj_fight,
+            self.__fight_fight,
+        ]
+        for func in _battles:
+            if not func():
+                break
         return True
 
     # 幻境战斗
-    def __hj_fight(self):
+    def __hj_fight(self) -> bool:
+        if self._player.module_hj_completed:
+            return self._player.module_hj_completed
         if self._player.hj_num <= 0:
             # 尝试祭坛重置幻境
             if not self.__try_reset_hj():
@@ -48,7 +53,7 @@ class BattleAction(GameAction):
                 pass
             else:
                 self._player.module_hj_completed = False
-            return
+            return self._player.module_hj_completed
         _target_hj_lvl = self._player.hj_lvl + 1
         _resp = self.mir_req("hj", "fight", id=_target_hj_lvl)
         if _resp['b'] == 1:
@@ -81,17 +86,19 @@ class BattleAction(GameAction):
             pass
         else:
             self.__logger.info(_resp)
-        return
+        return self._player.module_hj_completed
 
     # 秘境战斗.
-    def __mj_fight(self):
+    def __mj_fight(self) -> bool:
+        if self._player.module_mj_completed:
+            return self._player.module_mj_completed
         # TODO: 未实现
         if self._player.mj_num <= 0:
             self._player.module_mj_completed = True
             self.__reset_min_of_dps()
             self._run_delay = -1
             self.__logger.info("=========================== 密境结束 ============================================")
-            return
+            return self._player.module_mj_completed
         __target_mj_lvl = self._player.mj_lvl + 1
         _resp = self.mir_req("mj", "fight", id=__target_mj_lvl)
         if _resp['b'] == 1:
@@ -130,14 +137,16 @@ class BattleAction(GameAction):
             self.__logger.info(_resp)
         else:
             self.__logger.info(_resp)
-        return
+        return self._player.module_mj_completed
 
     # VIP扫荡推图BOSS特权
     def __fight_fight_vip(self):
         return
 
     # 推图BOSS战斗. - 优先级最低. 尝试100次战斗, 战斗结果都是失败则说明战斗力不足
-    def __fight_fight(self):
+    def __fight_fight(self) -> bool:
+        if self._player.module_fight_completed:
+            return self._player.module_fight_completed
         if self._player.mapboss <= 0:
             if self._config.enable_use_boss_item:
                 # TODO: 自动使用BOSS挑战券增加挑战次数
@@ -150,7 +159,7 @@ class BattleAction(GameAction):
             self._run_delay = -1
             self.__logger.info("=========================== 推图BOSS结束 ============================================")
             self.mir_req("fight", "guaji", id=self._player.map)
-            return
+            return self._player.module_fight_completed
         # 挑战下一张地图
         __target_map = self._player.map + 1
         _resp = self.mir_req("fight", "fight", id=__target_map)
@@ -204,7 +213,7 @@ class BattleAction(GameAction):
         else:
             self.__logger.info(_resp)
             pass
-        return
+        return self._player.module_fight_completed
 
     # 尝试重置幻境
     def __try_reset_hj(self) -> bool:

@@ -11,12 +11,16 @@
 #   世界Boss      |
 #   劫镖          |
 #
+import logging
 from dataclasses import dataclass
 from datetime import datetime
 # 战斗属性
 from typing import Dict
 
-from minimir.Struct import ItemInfo
+import requests
+
+from minimir import MiniMir
+from minimir.Struct import ItemInfo, AccountConfig
 
 
 @dataclass()
@@ -49,6 +53,7 @@ class BattleProperty:
 
 # 玩家数据
 class GamePlayer:
+    __logger = logging.getLogger(__name__)
     # 角色名
     name: str = ""
     # 用户唯一ID
@@ -106,6 +111,10 @@ class GamePlayer:
     body_item: Dict[int, ItemInfo]
 
     # ========================== 脚本 ===================================
+    # 客户端
+    client: MiniMir
+    # 账号相关配置
+    acc_config: AccountConfig
     # 上次签到时间
     last_sign_in = None
 
@@ -123,5 +132,51 @@ class GamePlayer:
     # m - 推图BOSS
     module_fight_completed: bool = False
 
-    def __init__(self) -> None:
+    def __init__(self, client: MiniMir, ac: AccountConfig) -> None:
         super().__init__()
+        self.client = client
+        self.acc_config = ac
+        pass
+
+    # 调用接口
+    # md5(1079296108 + BFEBFBFF + 000306C3)  => d43228ea4953279321578cc6a4dc18f8
+    # _base_secret = 'd43228ea4953279321578cc6a4dc18f8'
+    def mir_request(self, module, action, **kargs):
+        _params = {}
+        _params = kargs if kargs is not None else {}
+        _params["m"] = module
+        _params["a"] = action
+        if "without_md5" in kargs:
+            del _params["without_md5"]
+        else:
+            _params["md5"] = self.acc_config.m_md5
+            pass
+
+        _url_extra = []
+        for k, v in kargs.items():
+            _url_extra.append("{}={}".format(k, v))
+            pass
+
+        headers = {
+            "Content-Type": "application/x-www-form-urlencoded",
+            "User-Agent": "Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.0)",
+            "Accept": "image/gif, image/x-xbitmap, image/jpeg, image/pjpeg, application/x-shockwave-flash, "
+                      "application/vnd."
+                      "ms-excel, application/vnd.ms-powerpoint, application/msword, */*"
+        }
+        # 简单的伪造IP   - hping3伪造源IP   - REMOTE_ADDR
+        if self.client.setting.enable_random_client_ip:
+            headers["CLIENT-IP"] = self.acc_config.m_client_ip
+            headers["X-FORWARDED-FOR"] = self.acc_config.m_client_ip
+            headers["X-REAL-IP"] = self.acc_config.m_client_ip
+            pass
+        self.__logger.debug("[request] module:{}, action:{}, kargs:{}".format(module, action, kargs))
+        r = requests.post("{}?{}".format(self.client.host, "&".join(_url_extra)), data=_params, headers=headers)
+        if r.status_code == requests.codes.ok:
+            resp = r.json()
+            # if resp['b'] != 1:
+            #     self.__logger.debug(resp)
+            return resp
+        else:
+            r.raise_for_status()
+        return
