@@ -55,7 +55,7 @@ class MiniMir:
     def __user_load(self, acc_config: AccountConfig) -> GamePlayer:
         __player = GamePlayer(self, acc_config)
         if acc_config is not None and acc_config.m_md5 is None:
-            # TODO 未实现逻辑 - 秘钥混淆逻辑目前暂时还未破解
+            # TODO TINYZ. 未实现逻辑 - 秘钥混淆逻辑目前暂时还未破解
             _cur_timestamp = time.time()
             # val = md5(密码 + var + 时间戳)  => 123456d43228ea4953279321578cc6a4dc18f81586344509
             val = self.gen_md5(
@@ -74,7 +74,7 @@ class MiniMir:
                 Utils.reflect_set_field([__player, __player.unit], field_name, field_val)
             pass
         else:
-            raise Exception("获取用户数据失败.")
+            raise Exception("获取用户数据失败.{}".format(resp))
         return __player
 
     # 逻辑心跳

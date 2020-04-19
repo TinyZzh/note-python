@@ -42,6 +42,10 @@ class Setting:
     bag_auto_use_item_list: list = [333, 234, 235, 236, 237, 238, 239, 407, 408]
     # 自动保存的仓库id
     auto_save_item_ku: int = 1
+    # 挂机时间的阀值
+    threshold_guaji_seconds: int = 1800
+    # 自动使用更好的装备
+    auto_use_better_equipment: bool = False
 
     def __init__(self) -> None:
         super().__init__()

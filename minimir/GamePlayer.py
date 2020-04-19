@@ -20,7 +20,7 @@ from typing import Dict
 import requests
 
 from minimir import MiniMir
-from minimir.Struct import ItemInfo, AccountConfig
+from minimir.Struct import ItemInfo, AccountConfig, HangHuiInfo
 
 
 @dataclass()
@@ -73,6 +73,8 @@ class GamePlayer:
     war: int = 0
     # 声望
     rep: int = 0
+
+    job: int = 0
     #
     # ========================== 挂机相关 ===================================
     guaji: bool = False
@@ -115,6 +117,8 @@ class GamePlayer:
     client: MiniMir
     # 账号相关配置
     acc_config: AccountConfig
+    # 行会信息
+    hh: HangHuiInfo
     # 上次签到时间
     last_sign_in = None
 

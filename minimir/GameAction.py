@@ -1,7 +1,7 @@
 # -*- coding:UTF-8 -*-
 import logging
 import time
-from typing import List, Dict
+from typing import List, Dict, Callable
 
 from minimir import MiniMir, Setting, Struct
 from minimir.GamePlayer import GamePlayer
@@ -40,12 +40,20 @@ class GameAction:
     def mir_req(self, module, action, **kargs):
         return self._player.mir_request(module, action, **kargs)
 
+    def mir_req_once(self, module, action, feedback: Callable[[object], None] = None, **kargs) -> bool:
+        _resp = self._player.mir_request(module, action, **kargs)
+        _suc = 'b' in _resp and _resp['b'] == 1
+        if _suc and feedback is not None and callable(feedback):
+            feedback(_resp)
+        return _suc
+
     def use_item(self, tid: int, amount: 1):
         return
 
     # 初始化玩家身上的装备
     def refresh_body_item(self):
         seats: Dict[int, ItemInfo] = {}
+        self.__logger.info("=================== 同步玩家身上的装备 =======================")
         resp = self.mir_req("item", "loaditem", type=3, ku=0)
         if resp is not None and "b" in resp and resp['b'] == 1:
             for _ri in resp['item']:
@@ -91,9 +99,17 @@ class GameAction:
                                                                       _info.num, _info))
                 # 检查自动行会捐献 - 行会物资
                 elif _info.itemid == 339:
-                    self.mir_req("hh", "gave", num=_info.num)
-                    self.__logger.info("捐献:{}, 数量:{}. info:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
-                                                                      _info.num, _info))
+                    if self._player.hh is not None and self._player.hh.has_hh:
+                        self.mir_req("hh", "gave", num=_info.num)
+                        self.__logger.info("捐献:{}, 数量:{}. info:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
+                                                                          _info.num, _info))
+                        pass
+                    pass
+                elif self._config.auto_use_better_equipment:
+                    # 自动换装
+                    # if Utils.cmp_item(self._player.job, _info, ):
+
+                    pass
                 # 检查自动保存. 幸运、天赋、总系数超过10
                 elif _info.x6 > 0 or _info.g1 > 0 or (_info.x1 + _info.x2 + _info.x3 + _info.x4 + _info.x5) > 10:
                     # 从背包保存到仓库1

@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from datetime import datetime
 
 item_attr = {
     # 攻击 - 魔法 - 道术 - 防御 - 魔防 - 幸运 - 速度
@@ -166,3 +167,18 @@ class ItemInfo(object):
     @staticmethod
     def tpl_item_attr(id: int):
         return None
+
+
+#   行会信息
+@dataclass
+class HangHuiInfo:
+    guaji: int
+    guajitime: datetime
+    # 最后一次同步行会信息的时间
+    time_last_refresh: datetime
+    # 是否有行会
+    has_hh: bool
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.guaji = 0
