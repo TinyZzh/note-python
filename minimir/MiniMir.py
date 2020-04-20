@@ -47,8 +47,6 @@ class MiniMir:
         self.actions.append(CityAction(self, player))
         self.actions.append(TickAction(self, player))
         self.actions.append(SignInAction(self, player))
-
-        self.start_logic_tick()
         return
 
     # 加载用户基础数据
@@ -100,7 +98,7 @@ class MiniMir:
         while True:
             schedule.run_pending()
             time.sleep(1)
-        return
+        pass
 
     def _worker_main(self):
         while 1:
