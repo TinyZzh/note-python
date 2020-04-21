@@ -41,8 +41,8 @@ class TickAction(GameAction):
                     for fn, fv in r.items():
                         Utils.reflect_set_field([_hh_], fn, fv)
                         pass
-                    # TODO：刚进入行会首次需要开始挂机
-                    self.mir_req("hh", "guaji")
+                    # 刚进入行会首次需要开始挂机
+                    self.mir_req_once("hh", "guaji")
                     pass
                 else:
                     _hh_.has_hh = False

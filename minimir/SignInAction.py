@@ -28,8 +28,8 @@ class SignInAction(GameAction):
                and p.module_yb_completed and p.module_fight_completed
 
     def execute(self) -> bool:
-        resp = self.mir_req("user", "dayup")
-        if resp is not None and "b" in resp and resp['b'] == 1:
+        # 签到
+        if self.mir_req_once("user", "dayup"):
             p = self._player
             _date = datetime.strftime(datetime.now(), "%Y-%m-%d")
             self._cur_sign_date = _date
@@ -44,5 +44,10 @@ class SignInAction(GameAction):
         else:
             self.__logger.info("=================== 今日已签到:{} ====================".format(self._cur_sign_date))
             pass
+        #   膜拜沙城   TODO:
+        if self.mir_req_once("user", "dayup"):
+            self.__logger.info("=================== 膜拜成功:{} ====================".format(self._cur_sign_date))
+            pass
+
         self.auto_arrange_bag()
         return False

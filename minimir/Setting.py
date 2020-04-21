@@ -24,6 +24,10 @@ class Setting:
     enable_auto_arrange_bag: bool = True
     # 自动出售矿石
     enable_auto_sell_ore: bool = True
+    # 城池被攻击. 自动占领新城池. 从最弱的开始. 恶心对手
+    enable_city_fuck_off_protect: bool = True
+    # 自动找空余的城池. False时自动攻击比玩家实力低的城池
+    only_lookup_empty_city: bool = True
     #
     threshold_smelting_equipment_lvl = 10
     # 推图BOSS连续失败阀值
