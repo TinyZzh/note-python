@@ -44,9 +44,9 @@ class SignInAction(GameAction):
         else:
             self.__logger.info("=================== 今日已签到:{} ====================".format(self._cur_sign_date))
             pass
-        #   膜拜沙城   TODO:
-        if self.mir_req_once("user", "dayup"):
-            self.__logger.info("=================== 膜拜成功:{} ====================".format(self._cur_sign_date))
+        #   膜拜沙城
+        if self.mir_req_once("hh", "dayup"):
+            self.__logger.info("=================== 行会签到成功:{} ====================".format(self._cur_sign_date))
             pass
 
         self.auto_arrange_bag()
