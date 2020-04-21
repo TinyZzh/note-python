@@ -3,6 +3,7 @@ import hashlib
 import logging
 import threading
 import time
+from concurrent.futures.thread import ThreadPoolExecutor
 from datetime import datetime
 from queue import Queue
 
@@ -101,10 +102,17 @@ class MiniMir:
         pass
 
     def _worker_main(self):
-        while 1:
-            job_func = self._job_queue.get()
-            job_func()
-            self._job_queue.task_done()
+        with ThreadPoolExecutor(max_workers=5) as executor:
+            while True:
+                job_func = self._job_queue.get(True)
+                try:
+                    executor.submit(job_func)
+                except Exception as e:
+                    logging.exception("job failure. action:[}".format(type(job_func)), e)
+                finally:
+                    self._job_queue.task_done()
+                pass
+            pass
         pass
 
     def gen_md5(self, data):

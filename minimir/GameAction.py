@@ -1,6 +1,7 @@
 # -*- coding:UTF-8 -*-
 import logging
 import time
+from collections import Iterable
 from typing import List, Dict, Callable
 
 from minimir import MiniMir, Setting, Struct
@@ -40,12 +41,23 @@ class GameAction:
     def mir_req(self, module, action, **kargs):
         return self._player.mir_request(module, action, **kargs)
 
-    def mir_req_once(self, module, action, feedback: Callable[[object], None] = None, **kargs) -> bool:
+    def mir_req_once(self, module, action, feedback: [Iterable, Callable[[object], None]] = None, **kargs) -> [(
+            bool, object), None]:
         _resp = self._player.mir_request(module, action, **kargs)
-        _suc = 'b' in _resp and _resp['b'] == 1
-        if _suc and feedback is not None and callable(feedback):
-            feedback(_resp)
-        return _suc
+        _suc = _resp is not None and 'b' in _resp and _resp['b'] == 1
+        if _suc:
+            if feedback is not None:
+                if isinstance(feedback, Iterable):
+                    map(lambda f: f(_resp), feedback)
+                elif callable(feedback):
+                    feedback(_resp)
+                    pass
+                else:
+                    raise Exception("unknown feedback type:{}".format(type(feedback)))
+        else:
+            logging.debug("action:{}, response:{}", action, str(_resp))
+            pass
+        return _resp if _suc else None
 
     def use_item(self, tid: int, amount: 1):
         return
@@ -76,10 +88,8 @@ class GameAction:
         # 仓库
         # resp = self.mir_req("item", "loaditem", type=2, ku=1)
         # 背包
-        resp = self.mir_req("item", "loaditem", type=1, ku=0)
-        if resp is not None and "b" in resp and resp['b'] == 1:
-            _sell_dict: List[Struct.ItemInfo] = {}
-            _use_dict: List[Struct.ItemInfo] = {}
+        resp = self.mir_req_once("item", "loaditem", type=1, ku=0)
+        if resp:
             _item_ary: List[Struct.ItemInfo] = []
             for _ri in resp['item']:
                 _info = Struct.ItemInfo()
@@ -99,7 +109,7 @@ class GameAction:
                                                                       _info.num, _info))
                 # 检查自动行会捐献 - 行会物资
                 elif _info.itemid == 339:
-                    if self._player.hh is not None and self._player.hh.has_hh:
+                    if hasattr(self._player, 'hh') and self._player.hh is not None and self._player.hh.has_hh:
                         self.mir_req("hh", "gave", num=_info.num)
                         self.__logger.info("捐献:{}, 数量:{}. info:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
                                                                           _info.num, _info))
@@ -120,6 +130,7 @@ class GameAction:
                 else:
                     pass
                 pass
+
             # TODO: 将其余垃圾一键熔炼
             pass
         return

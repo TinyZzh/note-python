@@ -6,7 +6,6 @@ from datetime import datetime
 from typing import List, Callable
 
 from minimir.BattleAction import BattleAction
-from minimir.GameAction import GameAction
 
 
 # 新账户引导
@@ -16,13 +15,13 @@ class NewbieAction(BattleAction):
     def evaluate(self) -> bool:
         if self.yield_wait_for():
             return False
-        return not self._player.module_hj_completed \
-               or not self._player.module_mj_completed \
-               or not self._player.module_fight_completed
+        # 转生低于1转、等级低于50级
+        return self._player.met < 1 and self._player.lvl < 50
 
     def execute(self) -> bool:
         # 幻境 - 秘境 - 推图BOSS - PK -
         _battles: List[Callable] = [
+            self.__newbie_upgrade__,
             self.__hj_fight,
             self.__mj_fight,
             self.__fight_fight,
@@ -49,9 +48,6 @@ class NewbieAction(BattleAction):
                 self._player.guajitime = _now_
                 pass
             pass
-
-
-
         return False
 
     # 幻境战斗
@@ -233,20 +229,17 @@ class NewbieAction(BattleAction):
     # 尝试重置幻境
     def __try_reset_hj(self) -> bool:
         # 1. 重置昨日
-        _resp = self.mir_req("jt", "getczbl")
-        if int(_resp['b']) != 1:
+        if self.mir_req_once("jt", "getczbl"):
             # 2. 重置今日
-            _resp = self.mir_req("jt", "getcz")
-            if int(_resp['b']) != 1:
+            if self.mir_req_once("jt", "getcz"):
                 # 3. 使用祭坛进度重置
                 if self._config.enable_use_jt_exp:
-                    _resp = self.mir_req("jt", "load")
-                    if int(_resp['b']) == 1:
-                        if int(_resp['jt']['jt_exp']) >= 1000:
-                            _resp = self.mir_req("jt", "buy")
-                            if int(_resp['b']) == 1:
-                                self.__hj_reset()
-                                return True
+                    _resp = self.mir_req_once("jt", "load")
+                    if _resp and int(_resp['jt']['jt_exp']) >= 1000:
+                        _resp = self.mir_req("jt", "buy")
+                        if int(_resp['b']) == 1:
+                            self.__hj_reset()
+                            return True
                     pass
                 pass
             else:

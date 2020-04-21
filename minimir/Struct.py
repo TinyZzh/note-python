@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 item_attr = {
-    # 攻击 - 魔法 - 道术 - 防御 - 魔防 - 幸运 - 速度
+    # 攻击 - 魔法 - 道术 - 防御 - 魔防 - 幸运 - 速度 - 装备部位
     14: {'n': "布衣(男)", 'p': [4, 8, 0, 1, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0]},
     15: {'n': "布衣(女)", 'p': [4, 8, 0, 1, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0]},
     16: {'n': "木剑", 'p': [2, 5, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
@@ -182,3 +182,4 @@ class HangHuiInfo:
     def __init__(self) -> None:
         super().__init__()
         self.guaji = 0
+        self.has_hh = False

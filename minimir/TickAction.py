@@ -29,11 +29,11 @@ class TickAction(GameAction):
     # 行会挖矿
     def __guild_ore(self):
         _now = datetime.now()
-        _hh_ = self._player.hh
+        _hh_ = self._player.hh if hasattr(self._player, "hh") else None
         # 半个小时检查一次挖矿情况
         if _hh_ is None or ((_now - _hh_.time_last_refresh).seconds > 600):
-            resp = self.mir_req("hh", "loadone")
-            if resp is not None and "b" in resp and resp['b'] == 1:
+            resp = self.mir_req_once("hh", "loadone", feedback=lambda x: self.auto_arrange_bag())
+            if resp:
                 _hh_ = HangHuiInfo()
                 if 'hh' in resp:
                     _hh_.has_hh = True
@@ -59,10 +59,14 @@ class TickAction(GameAction):
             if duration.seconds >= self._config.max_wk_time:
                 self.__logger.info("=================== 执行行会挖矿 =======================")
                 # 结束挖矿. type为挖矿倍率
-                resp = self.mir_req("hh", "guajioff", type=1)
-                # 开始挖矿
-                resp = self.mir_req("hh", "guaji")
-                self.auto_arrange_bag()
+                if self.mir_req_once("hh", "guajioff", type=1):
+                    _hh_.guaji = 0
+                    # 开始挖矿
+                    if self.mir_req_once("hh", "guaji", feedback=lambda x: self.auto_arrange_bag()):
+                        _hh_.guaji = 1
+                        _hh_.guajitime = _now
+                        pass
+                    pass
                 pass
             pass
         return

@@ -1,9 +1,14 @@
-import logging
-
-from minimir.MiniMir import MiniMir
-from minimir.Setting import Setting
+# -*- coding:UTF-8 -*-
 
 if __name__ == "__main__":
+    import multiprocessing
+
+    multiprocessing.freeze_support()
+
+    import logging
+    from minimir.MiniMir import MiniMir
+    from minimir.Setting import Setting
+
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
     __logger_handlers = [
         logging.FileHandler(encoding='utf-8', mode='a', filename='./run.log'),
