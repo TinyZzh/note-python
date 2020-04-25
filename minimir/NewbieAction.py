@@ -5,10 +5,14 @@ import sys
 from datetime import datetime
 from typing import List, Callable
 
+from minimir import Struct
 from minimir.BattleAction import BattleAction
 
 
 # 新账户引导
+from minimir.Utils import Utils
+
+
 class NewbieAction(BattleAction):
     __logger = logging.getLogger(__name__)
 
@@ -50,218 +54,60 @@ class NewbieAction(BattleAction):
             pass
         return False
 
-    # 幻境战斗
-    def __hj_fight(self) -> bool:
-        if self._player.module_hj_completed:
-            return self._player.module_hj_completed
-        if self._player.hj_num <= 0:
-            # 尝试祭坛重置幻境
-            if not self.__try_reset_hj():
-                self._player.module_hj_completed = True
-                self.__reset_min_of_dps()
-                self._run_delay = -1
-                self.__logger.info("=========================== 幻境结束 ============================================")
-                pass
-            else:
-                self._player.module_hj_completed = False
-            return self._player.module_hj_completed
-        _target_hj_lvl = self._player.hj_lvl + 1
-        _resp = self.mir_req("hj", "fight", id=_target_hj_lvl)
-        if _resp['b'] == 1:
-            _td1 = 0
-            _td2 = 0
-            _rd = float(_resp['fight']['num'])
-            # 10回合 = 1秒CD
-            self._run_delay = math.ceil(_rd / self._config.each_second_delay_of_rounds)
-            for __info in _resp['fight']['process']:
-                _d = str.split(__info, "|")
-                if int(_d[0]) == 1:
-                    _td1 += int(_d[1])
+    # 整理背包  -   有天赋和系数高的装备自动保存到仓库
+    def auto_arrange_bag(self):
+        self.__logger.info("=================== 新账户整理背包 =======================")
+        # 玩家身上的装备
+        self.refresh_body_item()
+        # resp = self.mir_req("item", "loaditem", type=3, ku=0)
+        # 仓库
+        # resp = self.mir_req("item", "loaditem", type=2, ku=1)
+        # 背包
+        resp = self.mir_req_once("item", "loaditem", type=1, ku=0)
+        if resp:
+            _item_ary: List[Struct.ItemInfo] = []
+            for _ri in resp['item']:
+                _info = Struct.ItemInfo()
+                for fn, fv in _ri.items():
+                    Utils.reflect_set_field([_info], fn, fv)
+                    pass
+                _item_ary.append(_info)
+                # 检查自动出售道具
+                if _info.itemid in self._config.bag_auto_sell_item_list:
+                    self.mir_req("item", "sell", id=_info.id, num=_info.num)
+                    self.__logger.info("出售:{}, 数量:{}. info:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
+                                                                      _info.num, _info))
+                # 检查自动使用的道具
+                elif _info.itemid in self._config.bag_auto_use_item_list:
+                    self.mir_req("item", "yong", id=_info.id, num=_info.num, seat=0)
+                    self.__logger.info("使用:{}, 数量:{}. info:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
+                                                                      _info.num, _info))
+                # 检查自动行会捐献 - 行会物资
+                elif _info.itemid == 339:
+                    if hasattr(self._player, 'hh') and self._player.hh is not None and self._player.hh.has_hh:
+                        self.mir_req("hh", "gave", num=_info.num)
+                        self.__logger.info("捐献:{}, 数量:{}. info:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
+                                                                          _info.num, _info))
+                        pass
+                    pass
+                elif self._config.auto_use_better_equipment:
+                    # 自动换装
+                    self._player.job
+                    if Utils.cmp_item(self._player.job, _info, ):
+
+                    pass
+                # 检查自动保存. 幸运、天赋、总系数超过10
+                elif _info.x6 > 0 or _info.g1 > 0 or (_info.x1 + _info.x2 + _info.x3 + _info.x4 + _info.x5) > 10:
+                    # 从背包保存到仓库1
+                    self.mir_req("item", "itemku", id=_info.id, type=1, ku=self._config.auto_save_item_ku)
+                    _li = "保存:{}, 数量:{}. info:{}, 仓库:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
+                                                                _info.num,
+                                                                _info, self._config.auto_save_item_ku)
+                    self.__logger.info(_li)
                 else:
-                    _td2 += int(_d[1])
-                pass
-            is_win = int(_resp['fight']['result']) == 1
-            bhp = _resp['fight']['bhp']
-            result = "胜利" if is_win else "LOSE"
-            min_of_dps = self.__f_min_of_dps = min(self.__f_min_of_dps, (bhp / _rd) - (_td1 / _rd))
-            self.__logger.info("hj_id:{}.{}, 差:{}. p_dps:{:.2f}. boss dps:{:.2f}, round:{:n}, ptd:{:.2f}, btd:{:.2f}."
-                               "pre_dps:{:.2f}, min_of_dps:{:.2f}"
-                               .format(self._player.hj_lvl, result, bhp - _td1, _td1 / _rd, _td2 / _rd, _rd, _td1, _td2,
-                                       (bhp / _rd), min_of_dps))
-            # 扣除幻境挑战次数
-            self._player.hj_num -= 1
-            if is_win:
-                self._player.hj_lvl += 1
-                self.__reset_min_of_dps()
-        elif str(_resp['t']).startswith("幻境战斗尚未结束"):
-            pass
-        else:
-            self.__logger.info(_resp)
-        return self._player.module_hj_completed
-
-    # 秘境战斗.
-    def __mj_fight(self) -> bool:
-        if self._player.module_mj_completed:
-            return self._player.module_mj_completed
-        # TODO: 未实现
-        if self._player.mj_num <= 0:
-            self._player.module_mj_completed = True
-            self.__reset_min_of_dps()
-            self._run_delay = -1
-            self.__logger.info("=========================== 密境结束 ============================================")
-            return self._player.module_mj_completed
-        __target_mj_lvl = self._player.mj_lvl + 1
-        _resp = self.mir_req("mj", "fight", id=__target_mj_lvl)
-        if _resp['b'] == 1:
-            # player total damage
-            _ptd = 0
-            # boss total damage
-            _btd = 0
-            _rd = float(_resp['fight']['num'])
-            # 10回合 = 1秒CD
-            self._run_delay = math.ceil(_rd / self._config.each_second_delay_of_rounds)
-            for __info in _resp['fight']['process']:
-                _d = str.split(__info, "|")
-                if int(_d[0]) == 1:
-                    _ptd += int(_d[1])
-                else:
-                    _btd += int(_d[1])
-                pass
-            is_win = int(_resp['fight']['result']) == 1
-            bhp = _resp['fight']['bhp']
-            result = "胜利" if is_win else "LOSE"
-            min_of_dps = self.__f_min_of_dps = min(self.__f_min_of_dps, (bhp / _rd) - (_ptd / _rd))
-            self.__logger.info("mj_id:{}.{}, 差:{}. p_dps:{:.2f}. boss dps:{:.2f}, round:{:.n}, ptd:{:.2f}, btd:{:.2f}."
-                               "pre_dps:{:.2f}, min_of_dps:{:.2f}"
-                               .format(self._player.mj_lvl, result, bhp - _ptd, _ptd / _rd, _btd / _rd, _rd, _ptd, _btd,
-                                       (bhp / _rd), min_of_dps))
-            # 扣除秘境挑战次数
-            self._player.mj_num -= 1
-            if is_win:
-                self._player.mj_lvl += 1
-                self.__reset_min_of_dps()
-        elif str(_resp['t']).startswith("秘境战斗尚未结束"):
-            self.__logger.info(_resp)
-            pass
-        elif str(_resp['t']).startswith("巅峰后才可以挑战"):
-            self._player.module_mj_completed = True
-            self.__logger.info(_resp)
-        else:
-            self.__logger.info(_resp)
-        return self._player.module_mj_completed
-
-    # VIP扫荡推图BOSS特权
-    def __fight_fight_vip(self):
-        return
-
-    # 推图BOSS战斗. - 优先级最低. 尝试100次战斗, 战斗结果都是失败则说明战斗力不足
-    def __fight_fight(self) -> bool:
-        if self._player.module_fight_completed:
-            return self._player.module_fight_completed
-        if self._player.mapboss <= 0:
-            if self._config.enable_use_boss_item:
-                # TODO: 自动使用BOSS挑战券增加挑战次数
-                pass
-            else:
-                self.__fight_fail_count = self._config.fight_fight_fail_threshold
-                pass
-        if self.__fight_fail_count >= self._config.fight_fight_fail_threshold:
-            self._player.module_fight_completed = True
-            self._run_delay = -1
-            self.__logger.info("=========================== 推图BOSS结束 ============================================")
-            self.mir_req("fight", "guaji", id=self._player.map)
-            return self._player.module_fight_completed
-        # 挑战下一张地图
-        __target_map = self._player.map + 1
-        _resp = self.mir_req("fight", "fight", id=__target_map)
-        if _resp['b'] == 1:
-            __fi = _resp['fight']
-            # 战斗回合数
-            _rd = float(__fi['num'])
-            # 10回合 = 1秒CD
-            self._run_delay = math.ceil(_rd / self._config.each_second_delay_of_rounds)
-            _td1 = 0
-            _td2 = 0
-            for __info in __fi['process']:
-                _d = str.split(__info, "|")
-                if int(_d[0]) == 1:
-                    _td1 += int(_d[1])
-                else:
-                    _td2 += int(_d[1])
-                pass
-            is_win = int(_resp['fight']['result']) == 1
-            if is_win:
-                self._player.map += 1
-                self._player.mapboss -= 1
-                self.__fight_fail_count = 0
-            else:
-                self.__fight_fail_count += 1
-                pass
-            res = "胜利" if is_win else "lose"
-            p_dps = _td1 / _rd
-            b_dps = _td2 / _rd
-            self.__logger.info("map:{} - {}. p_dps:{:.2f}. boss_dps:{:.2f}, 回合数:{:n}, ptd:{:.2f}, btd:{:.2f}"
-                               .format(__target_map, res, p_dps, b_dps, _rd, _td1, _td2))
-            pass
-        elif str(_resp['t']).startswith("当前状态不可以挑战BOSS，请先取消挂机"):
-            self.mir_req("fight", "guajioff")
-            self.__logger.debug(_resp)
-            pass
-        elif str(_resp['t']).startswith("挑战BOSS剩余次数不足"):
-            if self._config.enable_use_boss_item:
-                # self.mir_req("fight", "guajioff")
-                # TODO: 使用boss挑战卷道具增加次数
-                pass
-            self.__fight_fail_count = self._config.fight_fight_fail_threshold
-            self.__logger.debug(_resp)
-        elif str(_resp['t']).startswith("转生太低"):
-            # 无法挑战. 直接结束
-            self.__fight_fail_count = self._config.fight_fight_fail_threshold
-            self.__logger.debug(_resp)
-        elif str(_resp['t']).startswith("BOSS战斗尚未结束"):
-            self.__logger.info(_resp)
-            pass
-        else:
-            self.__logger.info(_resp)
-            pass
-        return self._player.module_fight_completed
-
-    # 尝试重置幻境
-    def __try_reset_hj(self) -> bool:
-        # 1. 重置昨日
-        if self.mir_req_once("jt", "getczbl"):
-            # 2. 重置今日
-            if self.mir_req_once("jt", "getcz"):
-                # 3. 使用祭坛进度重置
-                if self._config.enable_use_jt_exp:
-                    _resp = self.mir_req_once("jt", "load")
-                    if _resp and int(_resp['jt']['jt_exp']) >= 1000:
-                        _resp = self.mir_req("jt", "buy")
-                        if int(_resp['b']) == 1:
-                            self.__hj_reset()
-                            return True
                     pass
                 pass
-            else:
-                self.__hj_reset()
-                return True
-        else:
-            self.__hj_reset()
-            return True
-        return False
 
-    def __hj_reset(self):
-        self._player.hj_lvl = 0
-        self._player.hj_num = 1000
-        self.__logger.info("======================== 幻境重置成功 ==============================")
-        return
-
-    def __mj_reset(self):
-        self._player.mj_lvl = 0
-        self._player.mj_num = 1000
-        self.__logger.info("======================== 秘境重置成功 ==============================")
-        return
-
-    def __reset_min_of_dps(self):
-        self.__f_min_of_dps = sys.maxsize
+            # TODO: 将其余垃圾一键熔炼
+            pass
         return
