@@ -9,22 +9,23 @@ from queue import Queue
 
 import schedule
 
-#
-# m=account&a=login&username=zou90512&password=123456&val=36619668b04d661de0ba6bc7d6fa7ecb&var=d43228ea4953279321578cc6a4dc18f8&t=1586339079
-#
 from minimir.BattleAction import BattleAction
 from minimir.CityAction import CityAction
 from minimir.GameAction import GameAction
-from minimir.GamePlayer import GamePlayer, BattleProperty
+from minimir.GamePlayer import GamePlayer
+from minimir.NewbieAction import NewbieAction
 from minimir.Setting import Setting
 from minimir.SignInAction import SignInAction
-from minimir.Struct import AccountConfig
+from minimir.Struct import AccountConfig, BattleProperty
 from minimir.TickAction import TickAction
 from minimir.Utils import Utils
 from minimir.YbAction import YbAction
 
 
 class MiniMir:
+    #
+    # m=account&a=login&username=zou90512&password=123456&val=36619668b04d661de0ba6bc7d6fa7ecb&var=d43228ea4953279321578cc6a4dc18f8&t=1586339079
+    #
     __logger = logging.getLogger(__name__)
 
     host = ""
@@ -35,19 +36,19 @@ class MiniMir:
 
     _job_queue = Queue()
 
-    def __init__(self, host: str, setting: Setting) -> None:
+    def __init__(self, host: str) -> None:
         self.host = host
-        self.setting = setting
         super().__init__()
 
     # 登录游戏
     def login(self, _ac: AccountConfig):
         player = self.__user_load(_ac)
-        self.actions.append(YbAction(self, player))
-        self.actions.append(BattleAction(self, player))
-        self.actions.append(CityAction(self, player))
-        self.actions.append(TickAction(self, player))
-        self.actions.append(SignInAction(self, player))
+        self.actions.append(NewbieAction(self, player, _ac.m_setting))
+        self.actions.append(YbAction(self, player, _ac.m_setting))
+        self.actions.append(BattleAction(self, player, _ac.m_setting))
+        self.actions.append(CityAction(self, player, _ac.m_setting))
+        self.actions.append(TickAction(self, player, _ac.m_setting))
+        self.actions.append(SignInAction(self, player, _ac.m_setting))
         return
 
     # 加载用户基础数据

@@ -3,18 +3,19 @@ from datetime import datetime
 
 from minimir import MiniMir, GamePlayer
 from minimir.GameAction import GameAction
+from minimir.Setting import Setting
 
 
-#
-# 每日签到
-#
 class SignInAction(GameAction):
+    #
+    # 每日签到
+    #
     __logger = logging.getLogger(__name__)
     # 当前签到的日期. 每日最多签到一次
     _cur_sign_date = None
 
-    def __init__(self, client: MiniMir, p: GamePlayer) -> None:
-        super().__init__(client, p)
+    def __init__(self, client: MiniMir, p: GamePlayer, setting: Setting) -> None:
+        super().__init__(client, p, setting)
         # 间隔3分钟(180s)检查一次
         self._run_delay = 180
 

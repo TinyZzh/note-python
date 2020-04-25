@@ -1,19 +1,21 @@
 # -*- coding:UTF-8 -*-
+import configparser
+import copy
 import ctypes
+import datetime
 import random
 import socket
 import struct
-from datetime import datetime
-from functools import reduce
-from typing import Any, Callable, List
+import typing
 
-from minimir.Struct import ItemInfo
+from minimir.Setting import Setting
+from minimir.Struct import AccountConfig
 
 
 class Utils:
 
     @staticmethod
-    def reflect_set_field(objs: list, field_name: str, field_val: Any):
+    def reflect_set_field(objs: list, field_name: str, field_val: typing.Any):
         for obj in objs:
             _annotations = obj.__annotations__
             if field_name in _annotations:
@@ -23,8 +25,8 @@ class Utils:
                     _val = int(field_val)
                 elif _annotations[field_name] == float:
                     _val = float(field_val)
-                elif _annotations[field_name] == datetime:
-                    _val = datetime.strptime(field_val, "%Y-%m-%d %H:%M:%S")
+                elif _annotations[field_name] == datetime.datetime:
+                    _val = datetime.datetime.strptime(field_val, "%Y-%m-%d %H:%M:%S")
                 else:
                     _val = field_val
                 setattr(obj, field_name, _val)
@@ -63,63 +65,41 @@ class Utils:
         return socket.inet_ntoa(struct.pack("!I", ip))
 
     @staticmethod
-    def to_datetime(str_datetime: str) -> datetime:
-        return datetime.strptime(str_datetime, "%Y-%m-%d %H:%M:%S")
+    def to_datetime(str_datetime: str) -> datetime.datetime:
+        return datetime.datetime.strptime(str_datetime, "%Y-%m-%d %H:%M:%S")
 
     @staticmethod
-    def to_datetime_str(dt: datetime) -> str:
-        return datetime.strftime(dt, "%Y-%m-%d %H:%M:%S")
+    def to_datetime_str(dt: datetime.datetime) -> str:
+        return datetime.datetime.strftime(dt, "%Y-%m-%d %H:%M:%S")
 
-    #
-    # item0是否比item1更好
-    #
     @staticmethod
-    def cmp_item(job: int, item0: ItemInfo, item1: ItemInfo) -> bool:
-        _cfg0 = []
-        _cfg1 = []
-        # 装备0的总评分
-        _i0_score = 0
-        # 装备1的总评分
-        _i1_score = 0
-        _cmp_result = 0
-        # 1. 幸运、速度
-        if item0.x6 > item1.x6 or item0.x7 > item1.x7:
-            return True
-
-        # 2. 天赋优先.  天赋的占比增高
-        # if item0.g1 == 2 and item1.g1 == 2:
-        #     return item0.g2 > item1.g2
-        # elif item0.g1 == 2:
-        #     return True
-        # elif item1.g1 == 2:
-        #     return False
-        _g_type = 4 if job == 1 else 2 if job == 2 else 3
-        _offset = item0.g2 - item1.g2 if item0.g1 == _g_type and item1.g1 == _g_type else \
-            item0.g1 if item0.g1 == _g_type else \
-                -item1.g1 if item1.g1 == _g_type else 0
-        if _offset != 0:
-            return _offset > 0
-
-        # 3. 检查装备的总属性收益 = 系数 + 基础属性
-        _sum_xs_: Callable[[int, ItemInfo], List] = lambda j, i: (
-            i.x1 if j == 1 else i.x2 if j == 2 else i.x3, i.x4, i.x5)
-        _plus: Callable[[int, int], int] = lambda x, y: x + y
-        # 根据职业的攻击属性
-        _attr_list = [0, 1] if job == 1 else [2, 3] if job == 2 else [4, 5]
-        # 防御、魔防
-        _attr_list.extend([6, 7, 8, 9])
-        _at0 = list(map(lambda i: _cfg0[i], _attr_list))
-        _at0.extend(_sum_xs_(job, item0))
-        _attr0 = reduce(_plus, _at0)
-        _at1 = list(map(lambda i: _cfg1[i], _attr_list))
-        _at1.extend(_sum_xs_(job, item1))
-        _attr1 = reduce(_plus, _at1)
-        if _attr0 == _attr1:
-            # 4. 主属性收益 = 职业的攻击主属性
-
-            _xs0_ = reduce(_plus, _sum_xs_(job, item0))
-            _xs1_ = reduce(_plus, _sum_xs_(job, item1))
-            # 5. 属性相同, 系数低的优先 - 成长空间大
-            if _xs0_ < _xs1_:
-                return True
-        return _attr0 > _attr1
+    def load_account_setting() -> typing.List[AccountConfig]:
+        _file_path = 'conf/setting.ini'
+        _config = configparser.ConfigParser()
+        _config.read(_file_path, 'utf-8')
+        _section = "default"
+        _base_setting = Setting()
+        if _config.has_section(_section):
+            _base_setting.resolve_init_options(_base_setting.__annotations__, _config.items(_section))
+        accounts: typing.List[AccountConfig] = []
+        for account_section in _config.sections():
+            if _section == account_section:
+                continue
+            if _config.has_option(account_section, "enable") and not _config.getboolean(account_section, "enable"):
+                continue
+            _ip = _config.get(account_section, "client_ip")
+            if _ip is not None and len(_ip) > 0:
+                _ip = Utils.get_random_ip()
+                _config.set(account_section, "client_ip", _ip)
+                _config.write(open(_file_path, 'w'))
+                pass
+            _user = _config.get(account_section, "user")
+            _psw = _config.get(account_section, "psw")
+            _val = _config.get(account_section, "val")
+            _md5 = _config.get(account_section, "md5")
+            _pri_setting = copy.deepcopy(_base_setting)
+            _pri_setting.resolve_init_options(_base_setting.__annotations__, _config.items(account_section))
+            _ac = AccountConfig(_user, _psw, _val, _md5, _ip, _pri_setting)
+            accounts.append(_ac)
+            pass
+        return accounts

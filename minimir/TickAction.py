@@ -3,6 +3,7 @@ from datetime import datetime
 
 from minimir import MiniMir, GamePlayer
 from minimir.GameAction import GameAction
+from minimir.Setting import Setting
 from minimir.Struct import HangHuiInfo
 from minimir.Utils import Utils
 
@@ -13,8 +14,8 @@ from minimir.Utils import Utils
 class TickAction(GameAction):
     __logger = logging.getLogger(__name__)
 
-    def __init__(self, client: MiniMir, p: GamePlayer) -> None:
-        super().__init__(client, p)
+    def __init__(self, client: MiniMir, p: GamePlayer, setting: Setting) -> None:
+        super().__init__(client, p, setting)
         self._run_delay = -1
 
     def evaluate(self) -> bool:

@@ -1,8 +1,9 @@
 # -*- coding:UTF-8 -*-
 import logging
-import math
 import sys
 from typing import List, Callable
+
+import math
 
 from minimir.GameAction import GameAction
 

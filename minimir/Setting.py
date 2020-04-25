@@ -1,14 +1,10 @@
 # -*- coding:UTF-8 -*-
 
-import configparser
-from datetime import datetime
 #
 # 挂机相关设置参数
 #
-from typing import List
-
-from minimir.Struct import AccountConfig
-from minimir.Utils import Utils
+import datetime
+import typing
 
 
 class Setting:
@@ -53,46 +49,23 @@ class Setting:
 
     def __init__(self) -> None:
         super().__init__()
+        pass
 
-    def load_setting(self) -> List[AccountConfig]:
-        _file_path = 'conf/setting.ini'
-        _config = configparser.ConfigParser()
-        _config.read(_file_path, 'utf-8')
-        _section = "default"
-        if _config.has_section(_section):
-            _annotations = self.__annotations__
-            for r in _config.items(_section):
-                field_name = r[0]
-                field_val = r[1]
-                if field_name in _annotations:
-                    if _annotations[field_name] == bool:
-                        _val = True if "1" == field_val or "true" == str(field_val).lower() else False
-                    elif _annotations[field_name] == int:
-                        _val = int(field_val)
-                    elif _annotations[field_name] == float:
-                        _val = float(field_val)
-                    elif _annotations[field_name] == datetime:
-                        _val = datetime.strptime(field_val, "%Y-%m-%d %H:%M:%S")
-                    else:
-                        _val = field_val
-                    setattr(self, field_name, _val)
-                pass
+    def resolve_init_options(self, anns_dict: typing.Dict[str, any], items: typing.List[any]) -> None:
+        for r in items:
+            _field_name = r[0]
+            _field_val = r[1]
+            if _field_name in anns_dict:
+                if anns_dict[_field_name] == bool:
+                    _val = True if "1" == _field_val or "true" == str(_field_val).lower() else False
+                elif anns_dict[_field_name] == int:
+                    _val = int(_field_val)
+                elif anns_dict[_field_name] == float:
+                    _val = float(_field_val)
+                elif anns_dict[_field_name] == datetime.datetime:
+                    _val = datetime.datetime.strptime(_field_val, "%Y-%m-%d %H:%M:%S")
+                else:
+                    _val = _field_val
+                setattr(self, _field_name, _val)
             pass
-        accounts: List[AccountConfig] = []
-        for account_section in _config.sections():
-            if _section == account_section:
-                continue
-            _ip = _config.get(account_section, "client_ip")
-            if _ip is not None and len(_ip) > 0:
-                _ip = Utils.get_random_ip()
-                _config.set(account_section, "client_ip", _ip)
-                _config.write(open(_file_path, 'w'))
-                pass
-            _user = _config.get(account_section, "user")
-            _psw = _config.get(account_section, "psw")
-            _val = _config.get(account_section, "val")
-            _md5 = _config.get(account_section, "md5")
-            _ac = AccountConfig(_user, _psw, _val, _md5, _ip)
-            accounts.append(_ac)
-            pass
-        return accounts
+        return

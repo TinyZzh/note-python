@@ -4,6 +4,7 @@ from typing import List, Dict
 
 from minimir import MiniMir, GamePlayer
 from minimir.GameAction import GameAction
+from minimir.Setting import Setting
 
 
 class CityAction(GameAction):
@@ -16,8 +17,8 @@ class CityAction(GameAction):
     # 激活保护的时间. 超过1小时之后. 推出保护模式, 切换到正常的城池
     _time_active_protect: [datetime, None]
 
-    def __init__(self, client: MiniMir, p: GamePlayer) -> None:
-        super().__init__(client, p)
+    def __init__(self, client: MiniMir, p: GamePlayer, setting: Setting) -> None:
+        super().__init__(client, p, setting)
         self._run_delay = 180
 
     def evaluate(self) -> bool:
@@ -31,7 +32,7 @@ class CityAction(GameAction):
             for _city_info in resp['city']:
                 _dict[int(_city_info["cityid"])] = _city_info
                 # 检查是否是自己占领
-                if _city_info['userid'] != self._player.id:
+                if int(_city_info['userid']) != self._player.id:
                     _self_index = int(_city_info["cityid"])
                 pass
             if _self_index > 0:

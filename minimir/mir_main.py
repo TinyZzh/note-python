@@ -1,4 +1,5 @@
 # -*- coding:UTF-8 -*-
+from minimir.Utils import Utils
 
 if __name__ == "__main__":
     import multiprocessing
@@ -7,7 +8,6 @@ if __name__ == "__main__":
 
     import logging
     from minimir.MiniMir import MiniMir
-    from minimir.Setting import Setting
 
     log_format = "%(asctime)s - %(levelname)s - %(message)s"
     __logger_handlers = [
@@ -18,10 +18,8 @@ if __name__ == "__main__":
     logging.getLogger('schedule').level = logging.WARNING
 
     try:
-        _setting = Setting()
-        _accounts = _setting.load_setting()
-
-        game = MiniMir(host="http://mir.uuuyx.com/mir/game/do.php", setting=_setting)
+        game = MiniMir(host="http://mir.uuuyx.com/mir/game/do.php")
+        _accounts = Utils.load_account_setting()
         for _ac in _accounts:
             try:
                 game.login(_ac)

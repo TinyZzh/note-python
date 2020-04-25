@@ -1,19 +1,17 @@
 # -*- coding:UTF-8 -*-
 import logging
-import math
-import sys
 from datetime import datetime
 from typing import List, Callable
 
 from minimir import Struct
 from minimir.BattleAction import BattleAction
-
-
-# 新账户引导
 from minimir.Utils import Utils
 
 
 class NewbieAction(BattleAction):
+    # 新账户引导
+    # 1. 等级低于50级，转生等级0的新账户
+    # 2. 优先挂机。 每间隔=((等级/10) + 1) * 10分钟. 自动换装，自动尝试过图
     __logger = logging.getLogger(__name__)
 
     def evaluate(self) -> bool:
@@ -90,10 +88,10 @@ class NewbieAction(BattleAction):
                                                                           _info.num, _info))
                         pass
                     pass
-                elif self._config.auto_use_better_equipment:
+                elif _info.itemid in Struct.equipment_attr and self._config.auto_use_better_equipment:
                     # 自动换装
-                    self._player.job
-                    if Utils.cmp_item(self._player.job, _info, ):
+                    if self._player.cmp_item(_info, ):
+                        pass
 
                     pass
                 # 检查自动保存. 幸运、天赋、总系数超过10

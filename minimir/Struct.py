@@ -1,7 +1,10 @@
 from dataclasses import dataclass
 from datetime import datetime
+from typing import List, Iterable
 
-item_attr = {
+from minimir.Setting import Setting
+
+equipment_attr = {
     # 攻击 - 魔法 - 道术 - 防御 - 魔防 - 幸运 - 速度 - 装备部位
     14: {'n': "布衣(男)", 'p': [4, 8, 0, 1, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0]},
     15: {'n': "布衣(女)", 'p': [4, 8, 0, 1, 0, 0, 0, 2, 0, 1, 0, 0, 0, 0]},
@@ -31,12 +34,13 @@ item_attr = {
     73: {'n': "大手镯", 'p': [0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0]},
     41: {'n': "青铜头盔", 'p': [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]},
     56: {'n': "皮质手套", 'p': [0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]},
-    1: {'n': "生铁戒指", 'p': [0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0]},
     65: {'n': "白金项链", 'p': [0, 0, 0, 2, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
     50: {'n': "六角戒指", 'p': [0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
     58: {'n': "刚手镯", 'p': [0, 0, 0, 0, 0, 0, 0, 1, 0, 1, 0, 0, 0, 0]},
     20: {'n': "轻型盔甲(女)", 'p': [0, 0, 0, 0, 0, 0, 3, 3, 1, 2, 0, 0, 0, 0]},
     19: {'n': "轻型盔甲(男)", 'p': [0, 0, 0, 0, 0, 0, 3, 3, 1, 2, 0, 0, 0, 0]},
+
+    1: {'n': "生铁戒指", 'p': [0, 0, 0, 1, 0, 0, 0, 2, 0, 0, 0, 0, 0, 0]},
     1: {'n': "圣战头盔", 'p': [0, 2, 0, 0, 0, 0, 4, 5, 2, 5, 0, 0, 0, 0]},
     1: {'n': "圣战项链", 'p': [3, 6, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]},
     1: {'n': "圣战手镯", 'p': [2, 3, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0]},
@@ -78,6 +82,8 @@ class AccountConfig(object):
     m_md5: str
     # 本次启动的临时客户端IP
     m_client_ip: str
+    # 游戏设置
+    m_setting: Setting
 
 
 @dataclass()
@@ -114,7 +120,7 @@ class ItemInfo(object):
     # 符文
     slvl: int
 
-    def __init__(self) -> None:
+    def __init__(self, args: Iterable = None) -> None:
         super().__init__()
         # 设置初始值
         for fn in self.__annotations__:
@@ -169,6 +175,58 @@ class ItemInfo(object):
         return None
 
 
+@dataclass()
+class CfgEquipmentInfo(object):
+    id: int
+    seat: int
+    # 武器的性别. 0:通用 1:男 2:女
+    sex: int
+    name: str
+    zhp: int
+    zmp: int
+    # 攻击
+    za1: int
+    za2: int
+    # 魔法
+    zb1: int
+    zb2: int
+    # 道术
+    zc1: int
+    zc2: int
+    # 防御
+    zd1: int
+    zd2: int
+    # 魔防
+    ze1: int
+    ze2: int
+    # 幸运
+    zf1: int
+    # 速度
+    speed: int
+    # 天赋类型  4:攻击  10：生命 13：速度
+    g1: int
+    # 天赋的数值
+    g2: int
+
+    def __init__(self, args: List = None, info: ItemInfo = None) -> None:
+        super().__init__()
+        i = 0
+        for fn in self.__annotations__:
+            setattr(self, fn, args[i] if i in args else None)
+            i += 1
+            pass
+        self.za2 += info.x1
+        self.zb2 += info.x2
+        self.zc2 += info.x3
+        self.zd2 += info.x4
+        self.ze2 += info.x5
+        self.zf1 += info.x6
+        self.speed += info.x7
+        self.g1 += info.g1
+        self.g2 += info.g2
+        pass
+
+
 #   行会信息
 @dataclass
 class HangHuiInfo:
@@ -181,5 +239,35 @@ class HangHuiInfo:
 
     def __init__(self) -> None:
         super().__init__()
-        self.guaji = 0
+        self.guaji
         self.has_hh = False
+
+
+@dataclass()
+class BattleProperty:
+    zhp: int = 0
+    zmp: int = 0
+    # 攻击
+    za1: int = 0
+    za2: int = 0
+    # 魔法
+    zb1: int = 0
+    zb2: int = 0
+    # 道术
+    zc1: int = 0
+    zc2: int = 0
+    # 防御
+    zd1: int = 0
+    zd2: int = 0
+    # 魔防
+    ze1: int = 0
+    ze2: int = 0
+    # 幸运
+    zf1: int = 0
+    # 速度
+    speed: int = 0
+
+    # def __init__(self) -> None:
+    #     super().__init__()
+
+

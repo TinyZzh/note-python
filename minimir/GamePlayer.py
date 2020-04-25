@@ -1,54 +1,17 @@
 # -*- coding:UTF-8 -*-
 
 
-#
-#   自动化脚本流程:
-#
-#   幻境          |   押镖  |   挖矿  |   推图挂机
-#   推图BOSS      |
-#   密境          |
-#   Boss之家      |
-#   世界Boss      |
-#   劫镖          |
-#
-import logging
-from dataclasses import dataclass
-from datetime import datetime
 # 战斗属性
+import functools
+import logging
+import typing
+from datetime import datetime
 from typing import Dict
 
 import requests
 
-from minimir import MiniMir
-from minimir.Struct import ItemInfo, AccountConfig, HangHuiInfo
-
-
-@dataclass()
-class BattleProperty:
-    zhp: int = 0
-    zmp: int = 0
-    # 攻击
-    za1: int = 0
-    za2: int = 0
-    # 魔法
-    zb1: int = 0
-    zb2: int = 0
-    # 道术
-    zc1: int = 0
-    zc2: int = 0
-    # 防御
-    zd1: int = 0
-    zd2: int = 0
-    # 魔防
-    ze1: int = 0
-    ze2: int = 0
-    # 幸运
-    zf1: int = 0
-    # 速度
-    speed: int = 0
-
-    # def __init__(self) -> None:
-    #     super().__init__()
+from minimir import MiniMir, Struct
+from minimir.Struct import BattleProperty, ItemInfo, AccountConfig, HangHuiInfo, CfgEquipmentInfo
 
 
 # 玩家数据
@@ -75,6 +38,8 @@ class GamePlayer:
     rep: int = 0
 
     job: int = 0
+    # 性别. 1:男性
+    sex: int = 1
     #
     # ========================== 挂机相关 ===================================
     guaji: bool = False
@@ -184,3 +149,61 @@ class GamePlayer:
         else:
             r.raise_for_status()
         return
+
+    #
+    # item0是否比item1更好
+    #
+    def cmp_item(self, item0: ItemInfo, item1: ItemInfo) -> bool:
+        _cfg0 = CfgEquipmentInfo(Struct.equipment_attr[item0.itemid])
+        if _cfg0.sex != 0 and _cfg0.sex != self.sex:
+            return False
+        _cfg1 = CfgEquipmentInfo(Struct.equipment_attr[item1.itemid])
+
+        job = self.job
+
+        # 装备0的总评分
+        _i0_score = 0
+        # 装备1的总评分
+        _i1_score = 0
+        _cmp_result = 0
+        # 1. 幸运、速度
+        if item0.x6 > item1.x6 or item0.x7 > item1.x7:
+            return True
+
+        # 2. 天赋优先.  天赋的占比增高
+        # if item0.g1 == 2 and item1.g1 == 2:
+        #     return item0.g2 > item1.g2
+        # elif item0.g1 == 2:
+        #     return True
+        # elif item1.g1 == 2:
+        #     return False
+        _g_type = 4 if job == 1 else 2 if job == 2 else 3
+        _offset = item0.g2 - item1.g2 if item0.g1 == _g_type and item1.g1 == _g_type else \
+            item0.g1 if item0.g1 == _g_type else \
+                -item1.g1 if item1.g1 == _g_type else 0
+        if _offset != 0:
+            return _offset > 0
+
+        # 3. 检查装备的总属性收益 = 系数 + 基础属性
+        _sum_xs_: typing.Callable[[int, ItemInfo], typing.List] = lambda j, i: (
+            i.x1 if j == 1 else i.x2 if j == 2 else i.x3, i.x4, i.x5)
+        _plus: typing.Callable[[int, int], int] = lambda x, y: x + y
+        # 根据职业的攻击属性
+        _attr_list = [0, 1] if job == 1 else [2, 3] if job == 2 else [4, 5]
+        # 防御、魔防
+        _attr_list.extend([6, 7, 8, 9])
+        _at0 = list(map(lambda i: _cfg0[i], _attr_list))
+        _at0.extend(_sum_xs_(job, item0))
+        _attr0 = functools.reduce(_plus, _at0)
+        _at1 = list(map(lambda i: _cfg1[i], _attr_list))
+        _at1.extend(_sum_xs_(job, item1))
+        _attr1 = functools.reduce(_plus, _at1)
+        if _attr0 == _attr1:
+            # 4. 主属性收益 = 职业的攻击主属性
+
+            _xs0_ = functools.reduce(_plus, _sum_xs_(job, item0))
+            _xs1_ = functools.reduce(_plus, _sum_xs_(job, item1))
+            # 5. 属性相同, 系数低的优先 - 成长空间大
+            if _xs0_ < _xs1_:
+                return True
+        return _attr0 > _attr1

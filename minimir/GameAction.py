@@ -23,11 +23,11 @@ class GameAction:
     _last_run_timestamp = -1
     _run_delay = -1
 
-    def __init__(self, client: MiniMir, p: GamePlayer) -> None:
+    def __init__(self, client: MiniMir, p: GamePlayer, setting: Setting) -> None:
         super().__init__()
         self._m_client = client
         self._player = p
-        self._config = client.setting
+        self._config = setting
 
     def evaluate(self) -> bool:
         raise NotImplementedError("unimplemented method:evaluate()")
