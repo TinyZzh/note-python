@@ -1,6 +1,7 @@
 # -*- coding:UTF-8 -*-
 import logging
 import sys
+from datetime import datetime
 from typing import List, Callable
 
 import math
@@ -44,6 +45,11 @@ class BattleAction(GameAction):
     def __hj_fight(self) -> bool:
         if self._player.module_hj_completed:
             return self._player.module_hj_completed
+        elif datetime.now().date().weekday() == 4:
+            # 星期五不进行幻境战斗. 等周六双倍经验
+            self._player.module_hj_completed = True
+            return self._player.module_hj_completed
+
         if self._player.hj_num <= 0:
             # 尝试祭坛重置幻境
             if not self.__try_reset_hj():
