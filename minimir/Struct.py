@@ -239,7 +239,7 @@ class HangHuiInfo:
 
     def __init__(self) -> None:
         super().__init__()
-        self.guaji
+        self.guaji = 0
         self.has_hh = False
 
 

@@ -20,6 +20,7 @@ class CityAction(GameAction):
     def __init__(self, client: MiniMir, p: GamePlayer, setting: Setting) -> None:
         super().__init__(client, p, setting)
         self._run_delay = 180
+        self._time_active_protect = None
 
     def evaluate(self) -> bool:
         return not self.yield_wait_for()
@@ -73,7 +74,7 @@ class CityAction(GameAction):
         else:
             return False
 
-    def _lookup_city(self, city_type_list: List[int], city_dict: Dict[int, object],
+    def _lookup_city(self, city_type_list: List[str], city_dict: Dict[int, object],
                      lookup_empty_city: bool, fuck_off_protect: bool) -> int:
         """
         查找城池
@@ -86,7 +87,7 @@ class CityAction(GameAction):
             _city_offset_ary = range(7, 0, -1) if not fuck_off_protect else range(1, 8)
             _best_empty_city = -1
             for p_city_id_offset in _city_offset_ary:
-                p_city_id = ct * 8 + p_city_id_offset
+                p_city_id = int(ct) * 8 + p_city_id_offset
                 if p_city_id not in city_dict and _best_empty_city < 0:
                     _best_empty_city = p_city_id
 

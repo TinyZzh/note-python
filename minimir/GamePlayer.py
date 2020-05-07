@@ -134,7 +134,7 @@ class GamePlayer:
                       "ms-excel, application/vnd.ms-powerpoint, application/msword, */*"
         }
         # 简单的伪造IP   - hping3伪造源IP   - REMOTE_ADDR
-        if self.client.setting.enable_random_client_ip:
+        if self.acc_config.m_setting.enable_random_client_ip:
             headers["CLIENT-IP"] = self.acc_config.m_client_ip
             headers["X-FORWARDED-FOR"] = self.acc_config.m_client_ip
             headers["X-REAL-IP"] = self.acc_config.m_client_ip

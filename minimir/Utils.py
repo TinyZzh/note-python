@@ -87,7 +87,9 @@ class Utils:
                 continue
             if _config.has_option(account_section, "enable") and not _config.getboolean(account_section, "enable"):
                 continue
-            _ip = _config.get(account_section, "client_ip")
+                pass
+            _has_client_ip = _config.has_option(account_section, "client_ip")
+            _ip = _config.get(account_section, "client_ip") if _has_client_ip else None
             if _ip is not None and len(_ip) > 0:
                 _ip = Utils.get_random_ip()
                 _config.set(account_section, "client_ip", _ip)

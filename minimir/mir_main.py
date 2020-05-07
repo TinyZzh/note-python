@@ -24,7 +24,7 @@ if __name__ == "__main__":
             try:
                 game.login(_ac)
             except Exception as e:
-                logging.exception("ac:{} login failure.".format(_ac), e)
+                logging.exception("ac:{} login failure.".format(str(_ac)), e)
             pass
         game.start_logic_tick()
     except Exception as e:

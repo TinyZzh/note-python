@@ -68,6 +68,9 @@ class TickAction(GameAction):
                         _hh_.guajitime = _now
                         pass
                     pass
-                pass
+                else:
+                    # try reload
+                    self._player.hh = None
+                    pass
             pass
         return

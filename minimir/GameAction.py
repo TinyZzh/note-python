@@ -55,7 +55,7 @@ class GameAction:
                 else:
                     raise Exception("unknown feedback type:{}".format(type(feedback)))
         else:
-            logging.debug("action:{}, response:{}", action, str(_resp))
+            logging.debug("action:{}, response:{}".format(action, str(_resp)))
             pass
         return _resp if _suc else None
 

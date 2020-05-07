@@ -64,6 +64,8 @@ class Setting:
                     _val = float(_field_val)
                 elif anns_dict[_field_name] == datetime.datetime:
                     _val = datetime.datetime.strptime(_field_val, "%Y-%m-%d %H:%M:%S")
+                elif anns_dict[_field_name] == list:
+                    _val = list(map(int, str.split(_field_val, "|")))
                 else:
                     _val = _field_val
                 setattr(self, _field_name, _val)
