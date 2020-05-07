@@ -40,14 +40,17 @@ class SignInAction(GameAction):
             p.module_mj_completed = False
             p.module_fight_completed = False
             p.module_pk_completed = False
-            self.__logger.info("=================== 签到成功:{} ====================".format(self._cur_sign_date))
+            self.__logger.info("==================={}:签到成功:{} ===================="
+                               .format(self._cur_sign_date, self._player.name))
             pass
         else:
-            self.__logger.info("=================== 今日已签到:{} ====================".format(self._cur_sign_date))
+            self.__logger.info("=================== {}:今日已签到:{} ===================="
+                               .format(self._cur_sign_date, self._player.name))
             pass
         #   膜拜沙城
         if self.mir_req_once("hh", "dayup"):
-            self.__logger.info("=================== 行会签到成功:{} ====================".format(self._cur_sign_date))
+            self.__logger.info("=================== {}:行会签到成功:{} ===================="
+                               .format(self._cur_sign_date, self._player.name))
             pass
 
         self.auto_arrange_bag()

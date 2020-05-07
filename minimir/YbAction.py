@@ -25,7 +25,7 @@ class YbAction(GameAction):
     def execute(self) -> bool:
         if self._is_running:
             if self.mir_req_once("yb", "getitem"):
-                self.__logger.info("============== 押镖结束. 领取奖励 ======================")
+                self.__logger.info("============== {}. 押镖结束. 领取奖励 ======================".format(self._player.name))
                 self._run_delay = -1
             pass
 

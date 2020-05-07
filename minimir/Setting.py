@@ -22,6 +22,8 @@ class Setting:
     enable_auto_sell_ore: bool = True
     # 城池被攻击. 自动占领新城池. 从最弱的开始. 恶心对手
     enable_city_fuck_off_protect: bool = True
+    # 切换到更好的城池.
+    enable_change_to_better_city: bool = False
     # 自动找空余的城池. False时自动攻击比玩家实力低的城池
     only_lookup_empty_city: bool = True
     #

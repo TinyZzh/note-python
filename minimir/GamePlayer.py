@@ -139,7 +139,7 @@ class GamePlayer:
             headers["X-FORWARDED-FOR"] = self.acc_config.m_client_ip
             headers["X-REAL-IP"] = self.acc_config.m_client_ip
             pass
-        self.__logger.debug("[request] module:{}, action:{}, kargs:{}".format(module, action, kargs))
+        self.__logger.debug("[request]user:{} module:{}, action:{}, kargs:{}".format(self.name, module, action, kargs))
         r = requests.post("{}?{}".format(self.client.host, "&".join(_url_extra)), data=_params, headers=headers)
         if r.status_code == requests.codes.ok:
             resp = r.json()

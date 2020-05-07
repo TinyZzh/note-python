@@ -1,10 +1,9 @@
 # -*- coding:UTF-8 -*-
 import logging
+import math
 import sys
 from datetime import datetime
 from typing import List, Callable
-
-import math
 
 from minimir.GameAction import GameAction
 
@@ -56,7 +55,8 @@ class BattleAction(GameAction):
                 self._player.module_hj_completed = True
                 self.__reset_min_of_dps()
                 self._run_delay = -1
-                self.__logger.info("=========================== 幻境结束 ============================================")
+                self.__logger.info("=========================== {}:幻境结束 ======================================"
+                                   .format(self._player.name))
                 pass
             else:
                 self._player.module_hj_completed = False
@@ -164,7 +164,8 @@ class BattleAction(GameAction):
         if self.__fight_fail_count >= self._config.fight_fight_fail_threshold:
             self._player.module_fight_completed = True
             self._run_delay = -1
-            self.__logger.info("=========================== 推图BOSS结束 ============================================")
+            self.__logger.info("=========================== {}:推图BOSS结束 ============================================"
+                               .format(self._player.name))
             self.mir_req("fight", "guaji", id=self._player.map)
             return self._player.module_fight_completed
         # 挑战下一张地图
@@ -252,13 +253,15 @@ class BattleAction(GameAction):
     def __hj_reset(self):
         self._player.hj_lvl = 0
         self._player.hj_num = 1000
-        self.__logger.info("======================== 幻境重置成功 ==============================")
+        self.__logger.info("======================== {}:幻境重置成功 =============================="
+                           .format(self._player.name))
         return
 
     def __mj_reset(self):
         self._player.mj_lvl = 0
         self._player.mj_num = 1000
-        self.__logger.info("======================== 秘境重置成功 ==============================")
+        self.__logger.info("======================== {}:秘境重置成功 =============================="
+                           .format(self._player.name))
         return
 
     def __reset_min_of_dps(self):

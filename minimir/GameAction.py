@@ -65,7 +65,7 @@ class GameAction:
     # 初始化玩家身上的装备
     def refresh_body_item(self):
         seats: Dict[int, ItemInfo] = {}
-        self.__logger.info("=================== 同步玩家身上的装备 =======================")
+        self.__logger.info("=================== {}:同步玩家身上的装备 =======================".format(self._player.name))
         resp = self.mir_req("item", "loaditem", type=3, ku=0)
         if resp is not None and "b" in resp and resp['b'] == 1:
             for _ri in resp['item']:
@@ -81,7 +81,7 @@ class GameAction:
 
     # 整理背包  -   有天赋和系数高的装备自动保存到仓库
     def auto_arrange_bag(self):
-        self.__logger.info("=================== 自动整理背包 =======================")
+        self.__logger.info("=================== {}:自动整理背包 =======================".format(self._player.name))
         # 玩家身上的装备
         self.refresh_body_item()
         # resp = self.mir_req("item", "loaditem", type=3, ku=0)
@@ -144,7 +144,8 @@ class GameAction:
         _timestamp = time.time()
         _offset = _timestamp - self._last_run_timestamp
         if _offset >= self._run_delay:
-            self.__logger.debug("--------------------- {}, {} ------------------------".format(type(self), _offset))
+            self.__logger.debug("--------------------- {}:{}, {} ------------------------"
+                                .format(self._player.name, type(self), _offset))
             self._last_run_timestamp = _timestamp
             return False
         else:

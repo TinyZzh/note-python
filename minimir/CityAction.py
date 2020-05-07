@@ -63,7 +63,13 @@ class CityAction(GameAction):
                                                     self._time_active_protect is not None)
                 pass
             if _target_city_id > 0:
-                if _target_city_id != self._cur_city_id and self.mir_req_once("city", "pk", id=_target_city_id):
+                _try_change = False
+                if self._config.enable_change_to_better_city:
+                    if _target_city_id != self._cur_city_id:
+                        _try_change = True
+                        pass
+                    pass
+                if _try_change and self.mir_req_once("city", "pk", id=_target_city_id):
                     self._cur_city_id = _target_city_id
                     self.__logger.info("================= 占领城市:{} ================".format(_target_city_id))
                 pass

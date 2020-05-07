@@ -58,7 +58,7 @@ class TickAction(GameAction):
         if _hh_.guaji:
             duration = _now - _hh_.guajitime
             if duration.seconds >= self._config.max_wk_time:
-                self.__logger.info("=================== 执行行会挖矿 =======================")
+                self.__logger.info("=================== {}:执行行会挖矿 =======================".format(self._player.name))
                 # 结束挖矿. type为挖矿倍率
                 if self.mir_req_once("hh", "guajioff", type=1):
                     _hh_.guaji = 0

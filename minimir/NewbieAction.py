@@ -54,7 +54,7 @@ class NewbieAction(BattleAction):
 
     # 整理背包  -   有天赋和系数高的装备自动保存到仓库
     def auto_arrange_bag(self):
-        self.__logger.info("=================== 新账户整理背包 =======================")
+        self.__logger.info("=================== {}:新账户整理背包 =======================".format(self._player.name))
         # 玩家身上的装备
         self.refresh_body_item()
         # resp = self.mir_req("item", "loaditem", type=3, ku=0)
