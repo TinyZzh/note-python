@@ -28,8 +28,8 @@ class CityAction(GameAction):
         return not self.yield_wait_for()
 
     def execute(self) -> bool:
-        resp = self.mir_req("city", "load", time="")
-        if resp['city']:
+        resp = self.mir_req_once("city", "load", time="")
+        if resp and 'city' in resp:
             _self_index = -1
             _dict = {}
             for _city_info in resp['city']:

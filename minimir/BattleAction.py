@@ -80,10 +80,11 @@ class BattleAction(GameAction):
             bhp = _resp['fight']['bhp']
             result = "胜利" if is_win else "LOSE"
             min_of_dps = self.__f_min_of_dps = min(self.__f_min_of_dps, (bhp / _rd) - (_td1 / _rd))
-            self.__logger.info("hj_id:{}.{}, 差:{}. p_dps:{:.2f}. boss dps:{:.2f}, round:{:n}, ptd:{:.2f}, btd:{:.2f}."
-                               "pre_dps:{:.2f}, min_of_dps:{:.2f}"
-                               .format(self._player.hj_lvl, result, bhp - _td1, _td1 / _rd, _td2 / _rd, _rd, _td1, _td2,
-                                       (bhp / _rd), min_of_dps))
+            self.__logger.info(
+                "{}:hj_id:{}.{}, 差:{}. p_dps:{:.2f}. boss dps:{:.2f}, round:{:n}, ptd:{:.2f}, btd:{:.2f}."
+                "pre_dps:{:.2f}, min_of_dps:{:.2f}"
+                .format(self._player.name, self._player.hj_lvl, result, bhp - _td1, _td1 / _rd, _td2 / _rd, _rd, _td1,
+                        _td2, (bhp / _rd), min_of_dps))
             # 扣除幻境挑战次数
             self._player.hj_num -= 1
             if is_win:
@@ -197,8 +198,8 @@ class BattleAction(GameAction):
             res = "胜利" if is_win else "lose"
             p_dps = _td1 / _rd
             b_dps = _td2 / _rd
-            self.__logger.info("map:{} - {}. p_dps:{:.2f}. boss_dps:{:.2f}, 回合数:{:n}, ptd:{:.2f}, btd:{:.2f}"
-                               .format(__target_map, res, p_dps, b_dps, _rd, _td1, _td2))
+            self.__logger.info("{}:map:{} - {}. p_dps:{:.2f}. boss_dps:{:.2f}, 回合数:{:n}, ptd:{:.2f}, btd:{:.2f}"
+                               .format(self._player.name, __target_map, res, p_dps, b_dps, _rd, _td1, _td2))
             pass
         elif str(_resp['t']).startswith("当前状态不可以挑战BOSS，请先取消挂机"):
             self.mir_req("fight", "guajioff")

@@ -100,19 +100,22 @@ class GameAction:
                 # 检查自动出售道具
                 if _info.itemid in self._config.bag_auto_sell_item_list:
                     self.mir_req("item", "sell", id=_info.id, num=_info.num)
-                    self.__logger.info("出售:{}, 数量:{}. info:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
-                                                                      _info.num, _info))
+                    self.__logger.info("{}:出售:{}, 数量:{}. info:{}"
+                                       .format(self._player.name, Struct.ItemInfo.tpl_items()[_info.itemid],
+                                               _info.num, _info))
                 # 检查自动使用的道具
                 elif _info.itemid in self._config.bag_auto_use_item_list:
                     self.mir_req("item", "yong", id=_info.id, num=_info.num, seat=0)
-                    self.__logger.info("使用:{}, 数量:{}. info:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
-                                                                      _info.num, _info))
+                    self.__logger.info("{}:使用:{}, 数量:{}. info:{}"
+                                       .format(self._player.name, Struct.ItemInfo.tpl_items()[_info.itemid], _info.num,
+                                               _info))
                 # 检查自动行会捐献 - 行会物资
                 elif _info.itemid == 339:
                     if hasattr(self._player, 'hh') and self._player.hh is not None and self._player.hh.has_hh:
                         self.mir_req("hh", "gave", num=_info.num)
-                        self.__logger.info("捐献:{}, 数量:{}. info:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid],
-                                                                          _info.num, _info))
+                        self.__logger.info("():捐献:{}, 数量:{}. info:{}".format(self._player.name,
+                                                                             Struct.ItemInfo.tpl_items()[_info.itemid],
+                                                                             _info.num, _info))
                         pass
                     pass
                 elif self._config.auto_use_better_equipment:
@@ -124,8 +127,9 @@ class GameAction:
                 elif _info.x6 > 0 or _info.g1 > 0 or (_info.x1 + _info.x2 + _info.x3 + _info.x4 + _info.x5) > 10:
                     # 从背包保存到仓库1
                     self.mir_req("item", "itemku", id=_info.id, type=1, ku=self._config.auto_save_item_ku)
-                    _li = "保存:{}, 数量:{}. info:{}, 仓库:{}".format(Struct.ItemInfo.tpl_items()[_info.itemid], _info.num,
-                                                                _info, self._config.auto_save_item_ku)
+                    _li = "{}:保存:{}, 数量:{}. info:{}, 仓库:{}".format(self._player.name,
+                                                                   Struct.ItemInfo.tpl_items()[_info.itemid], _info.num,
+                                                                   _info, self._config.auto_save_item_ku)
                     self.__logger.info(_li)
                 else:
                     pass
