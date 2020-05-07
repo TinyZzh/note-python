@@ -1,4 +1,6 @@
 # -*- coding:UTF-8 -*-
+from logging import handlers
+
 from minimir.Utils import Utils
 
 if __name__ == "__main__":
@@ -9,9 +11,9 @@ if __name__ == "__main__":
     import logging
     from minimir.MiniMir import MiniMir
 
-    log_format = "%(asctime)s - %(levelname)s - %(message)s"
+    log_format = "%(asctime)s[%(levelname)s] - %(name)s[%(funcName)s:%(lineno)d]: %(message)s"
     __logger_handlers = [
-        logging.FileHandler(encoding='utf-8', mode='a', filename='./run.log'),
+        handlers.TimedRotatingFileHandler(filename="./logs/run.log", when='D', interval=1, backupCount=5, encoding='utf-8'),
         logging.StreamHandler()
     ]
     logging.basicConfig(handlers=__logger_handlers, level='DEBUG', datefmt="[%Y-%m-%d %H:%M:%S]", format=log_format)
