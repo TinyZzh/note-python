@@ -65,7 +65,7 @@ class CityAction(GameAction):
             if _target_city_id > 0:
                 if _target_city_id != self._cur_city_id and self.mir_req_once("city", "pk", id=_target_city_id):
                     self._cur_city_id = _target_city_id
-                    self.__logger.info("================= 占领城市:{} ================", _target_city_id)
+                    self.__logger.info("================= 占领城市:{} ================".format(_target_city_id))
                 pass
             else:
                 self.__logger.info("================= 未找到合适的城市 ================")
