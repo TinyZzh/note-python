@@ -88,19 +88,20 @@ class Utils:
             if _config.has_option(account_section, "enable") and not _config.getboolean(account_section, "enable"):
                 continue
                 pass
-            _has_client_ip = _config.has_option(account_section, "client_ip")
-            _ip = _config.get(account_section, "client_ip") if _has_client_ip else None
-            if _ip is not None and len(_ip) > 0:
-                _ip = Utils.get_random_ip()
-                _config.set(account_section, "client_ip", _ip)
-                _config.write(open(_file_path, 'w'))
-                pass
             _user = _config.get(account_section, "user")
             _psw = _config.get(account_section, "psw")
             _val = _config.get(account_section, "val")
             _md5 = _config.get(account_section, "md5")
             _pri_setting = copy.deepcopy(_base_setting)
             _pri_setting.resolve_init_options(_base_setting.__annotations__, _config.items(account_section))
+            # client_ip
+            _has_client_ip = _config.has_option(account_section, "client_ip")
+            _ip = _config.get(account_section, "client_ip") if _has_client_ip else None
+            if _pri_setting.enable_random_client_ip and (_ip is None or len(_ip) <= 0):
+                _ip = Utils.get_random_ip()
+                _config.set(account_section, "client_ip", _ip)
+                _config.write(open(_file_path, 'w'))
+                pass
             _ac = AccountConfig(_user, _psw, _val, _md5, _ip, _pri_setting)
             accounts.append(_ac)
             pass
