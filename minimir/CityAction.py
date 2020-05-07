@@ -1,4 +1,5 @@
 import logging
+import random
 from datetime import datetime
 from typing import List, Dict
 
@@ -19,7 +20,8 @@ class CityAction(GameAction):
 
     def __init__(self, client: MiniMir, p: GamePlayer, setting: Setting) -> None:
         super().__init__(client, p, setting)
-        self._run_delay = 180
+        # 随机延迟. 避免并发的情况
+        self._run_delay = random.randint(45, 120)
         self._time_active_protect = None
 
     def evaluate(self) -> bool:
@@ -33,24 +35,26 @@ class CityAction(GameAction):
             for _city_info in resp['city']:
                 _dict[int(_city_info["cityid"])] = _city_info
                 # 检查是否是自己占领
-                if int(_city_info['userid']) != self._player.id:
+                if int(_city_info['userid']) == self._player.id:
                     _self_index = int(_city_info["cityid"])
                 pass
-            if _self_index > 0:
-                # 检查是否需要退出保护模式
-                if self._time_active_protect and (datetime.now() - self._time_active_protect).seconds > 3600:
+            # 怂逼模式. 不再占领城池， 等待1小时
+            if self._time_active_protect:
+                if (datetime.now() - self._time_active_protect).seconds < 3600:
+                    self.__logger.info("================= {}:城市 - 怂逼模式CD中, 剩余:{}秒 ================"
+                                       .format(self._player.name, (datetime.now() - self._time_active_protect).seconds))
+                    return False
+                else:
+                    # 怂逼模式结束
                     self._time_active_protect = None
                     pass
-                pass
-            else:
-                if self._cur_city_id > 0:
-                    # 被攻击, 是否激活保护
-                    self._time_active_protect = datetime.now() if self._config.enable_city_fuck_off_protect else None
-                    pass
+            #  上一个检查点占领城市. 当前检查点被攻击， 丢失城市. 是否激活保护
+            if _self_index < 0 and self._cur_city_id > 0:
+                self._time_active_protect = datetime.now() if self._config.enable_city_fuck_off_protect else None
                 pass
             # 设置city_id
             self._cur_city_id = _self_index
-            # 查找城池
+            # 筛选合适的城池
             _target_city_id = -1
             if self._config.custom_city_type > 0:
                 _target_city_id = self._lookup_city([self._config.custom_city_type], _dict,
@@ -63,18 +67,19 @@ class CityAction(GameAction):
                                                     self._time_active_protect is not None)
                 pass
             if _target_city_id > 0:
-                _try_change = False
-                if self._config.enable_change_to_better_city:
+                _try_change = self._cur_city_id < 0
+                if not _try_change and self._config.enable_change_to_better_city:
                     if _target_city_id != self._cur_city_id:
                         _try_change = True
                         pass
                     pass
                 if _try_change and self.mir_req_once("city", "pk", id=_target_city_id):
                     self._cur_city_id = _target_city_id
-                    self.__logger.info("================= 占领城市:{} ================".format(_target_city_id))
+                    self.__logger.info("================= {}:占领城市:{} ================"
+                                       .format(self._player.name, _target_city_id))
                 pass
             else:
-                self.__logger.info("================= 未找到合适的城市 ================")
+                self.__logger.info("================= {}:未找到合适的城市 ================".format(self._player.name))
                 pass
             return True
         else:
