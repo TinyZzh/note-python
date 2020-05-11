@@ -162,3 +162,17 @@ class GameAction:
             #  TODO: 未实现
             pass
         return
+
+    def resp_struct_item_list(self, resp: Any) -> List[Struct.ItemInfo]:
+        # 从resp中获取item列表
+        results: List[Struct.ItemInfo] = []
+        if "item" in resp:
+            for _ri in resp['item']:
+                _info = Struct.ItemInfo()
+                for fn, fv in _ri.items():
+                    Utils.reflect_set_field([_info], fn, fv)
+                    pass
+                results.append(_info)
+                pass
+            pass
+        return results

@@ -1,18 +1,21 @@
 # -*- coding:UTF-8 -*-
 import logging
-import math
 import sys
 from datetime import datetime
 from typing import List, Callable
 
+import math
+
 from minimir.GameAction import GameAction
+from minimir.Struct import WorldBossOverviewInfo, WorldBossRankInfo
+from minimir.Utils import Utils
 
 
-# 挂机
-# 挂机BOSS
-# BOSS之家
-# 密境
 class BattleAction(GameAction):
+    # 挂机
+    # 挂机BOSS
+    # BOSS之家
+    # 密境
     __logger = logging.getLogger(__name__)
     # ================================ 战报相关 ==============================
     __f_min_of_dps = sys.maxsize
@@ -39,6 +42,48 @@ class BattleAction(GameAction):
             if not func():
                 break
         return True
+
+    def _try_join_world_boss(self) -> bool:
+        # 世界boss是否结束.
+        if self._player.module_world_boss_completed:
+            return True
+        # self._run_delay = -1
+        _now = datetime.now()
+        if _now.date().weekday() == 6:
+            if _now.hour > 0:
+                self._player.module_world_boss_completed = False
+                pass
+            else:
+                return False
+        else:
+            self._player.module_world_boss_completed = True
+            return True
+        resp = self.mir_req_once("boss", "load", time="")
+        if resp:
+            _boss_info = WorldBossOverviewInfo()
+            for fn, fv in resp.items():
+                Utils.reflect_set_field([_boss_info], fn, fv)
+                pass
+            # 排行榜信息
+            if 'phb' in resp:
+                _phb = {}
+                for _ri in resp['phb']:
+                    _info = WorldBossRankInfo()
+                    for fn, fv in _ri.items():
+                        Utils.reflect_set_field([_info], fn, fv)
+                        pass
+                    _phb[_info.userid] = _info
+                    pass
+                # _try_fight =
+                # if self._player.id in _phb:
+                #
+                #     return
+                pass
+            pass
+            # 是否参与过？  一个boss只攻击一次
+            # 限制排名. 限制次数.
+
+        return False
 
     # 幻境战斗
     def __hj_fight(self) -> bool:
@@ -83,8 +128,9 @@ class BattleAction(GameAction):
             self.__logger.info(
                 "{}:hj_id:{}.{}, 差:{}. p_dps:{:.2f}. boss dps:{:.2f}, round:{:n}, ptd:{:.2f}, btd:{:.2f}."
                 "pre_dps:{:.2f}, min_of_dps:{:.2f}"
-                .format(self._player.name, self._player.hj_lvl, result, bhp - _td1, _td1 / _rd, _td2 / _rd, _rd, _td1,
-                        _td2, (bhp / _rd), min_of_dps))
+                    .format(self._player.name, self._player.hj_lvl, result, bhp - _td1, _td1 / _rd, _td2 / _rd, _rd,
+                            _td1,
+                            _td2, (bhp / _rd), min_of_dps))
             # 扣除幻境挑战次数
             self._player.hj_num -= 1
             if is_win:

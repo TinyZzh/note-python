@@ -53,5 +53,55 @@ class SignInAction(GameAction):
                                .format(self._cur_sign_date, self._player.name))
             pass
 
+        # 尝试完成成就
+        prev_ts_ary = self.resp_struct_item_list(self.mir_req_once("item", "loaditem", type=5, ku=0))
+        try:
+            for attr_name in ["x1", "x2", "x3", "x4", "x5"]:
+                self.try_attr_achievement(attr_name)
+        except Exception as e:
+            self.__logger.exception(e)
+        finally:
+            # rollback
+            map(lambda bk: self.__logger.info(self.mir_req_once("item", "yong", id=bk.id, num=1, seat=0)), prev_ts_ary)
+            pass
+
         self.auto_arrange_bag()
         return False
+
+    def try_attr_achievement(self, attr_name: str) -> None:
+        self.__logger.info("=================== {}:属性成就:{} ===================="
+                           .format(self._player.name, attr_name))
+        # 天书仓库
+        ts_items = self.resp_struct_item_list(self.mir_req_once("item", "loaditem", type=5, ku=0))
+        _total_attr = sum(map(lambda o: getattr(o, attr_name), ts_items))
+        #
+        bag_items = self.resp_struct_item_list(self.mir_req_once("item", "loaditem", type=1, ku=0))
+        bag_items.extend(ts_items)
+        _ts_ary = list(
+            filter(lambda o: o.itemid == 698 and hasattr(o, attr_name) and getattr(o, attr_name) > 0, bag_items))
+        _try_total_attr = sum(map(lambda o: getattr(o, attr_name), _ts_ary))
+        # 当前属性不是最优. 需要换天书
+        _ts_changed = False
+        if _try_total_attr > _total_attr:
+            # 先卸载全部天书
+            for bk in ts_items:
+                self.mir_req_once("item", "tsout", id=bk.id)
+                pass
+            for bk in _ts_ary:
+                self.__logger.info(self.mir_req_once("item", "yong", id=bk.id, num=1, seat=0))
+                pass
+            _ts_changed = True
+            pass
+        # x1 => 5  x2 => 6
+        _achieve_type = int(str(attr_name)[1]) + 4
+        resp = self.mir_req_once("achieve", "load", type=_achieve_type)
+        if resp:
+            self.__logger.info(resp)
+            pass
+        if _ts_changed:
+            for bk in ts_items:
+                self.mir_req_once("item", "tsout", id=bk.id)
+                pass
+            pass
+        self.__logger.info("attr:{} change completed. prev:{}, new:{}".format(attr_name, _total_attr, _try_total_attr))
+        pass

@@ -156,6 +156,10 @@ class ItemInfo(object):
     def tpl_items() -> dict:
         return {
             217: "祝福油",
+            219: "矿石",
+            220: "矿石",
+            221: "矿石",
+            222: "矿石",
             223: "黑铁矿石",
             234: "强化攻击",
             235: "强化魔法",
@@ -168,6 +172,7 @@ class ItemInfo(object):
             339: "物资(千)",
             407: "防御心法",
             408: "魔防心法",
+            698: "天书()",
         }
 
     @staticmethod
@@ -270,4 +275,30 @@ class BattleProperty:
     # def __init__(self) -> None:
     #     super().__init__()
 
+
+@dataclass()
+class WorldBossRankInfo:
+    id: int
+    userid: int
+    hp: int
+    num: int
+    name: str
+    job: int
+    sex: int
+    lvl: int
+    met: str
+
+    def __init__(self) -> None:
+        super().__init__()
+
+
+@dataclass()
+class WorldBossOverviewInfo:
+    boss_lvl: int
+    boss_hp: int
+    boss_zhp: int
+    phb: List[WorldBossRankInfo]
+
+    def __init__(self) -> None:
+        super().__init__()
 
